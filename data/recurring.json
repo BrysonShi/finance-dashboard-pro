@@ -1,0 +1,136 @@
+{
+  "note": "DEMO 循环收支（精简版）：工资 / 房租 / 保险 / 大头开销。amount 是原币种；frequency=monthly|annual；endDate=应缴止/截止月份。\n\n精简原则：删掉一切月几百块以下的零碎（停车/通讯/iCloud/年检），不演示退休/离职等阶段切换剧情。保险只保留通用类型（终身寿/重疾/少儿重疾），不点公司名。",
+
+  "incomes": [
+    {
+      "key": "salary_self",
+      "name": "工资 · Self",
+      "ccy": "RMB",
+      "amount": 22000,
+      "frequency": "monthly",
+      "kind": "salary",
+      "startDate": null,
+      "endDate": null,
+      "note": "DEMO：税后到手月薪 ~2.2w"
+    },
+    {
+      "key": "salary_wife",
+      "name": "工资 · Spouse",
+      "ccy": "RMB",
+      "amount": 12000,
+      "frequency": "monthly",
+      "kind": "salary",
+      "startDate": null,
+      "endDate": null,
+      "note": "DEMO：税后到手月薪 ~1.2w"
+    },
+    {
+      "key": "qianhai_rent",
+      "name": "房产 A 房租收入",
+      "ccy": "RMB",
+      "amount": 4500,
+      "frequency": "monthly",
+      "kind": "rental_income",
+      "startDate": null,
+      "endDate": null,
+      "note": "房产 A 出租中"
+    }
+  ],
+
+  "expenses": [
+    {
+      "key": "car_insurance",
+      "name": "车险",
+      "ccy": "RMB",
+      "amount": 4000,
+      "frequency": "annual",
+      "kind": "transport",
+      "startDate": null,
+      "endDate": null,
+      "note": "家用车商业险 + 交强险"
+    },
+
+    {
+      "key": "ins_life_self",
+      "name": "终身寿/重疾 · Self",
+      "ccy": "USD",
+      "amount": 600,
+      "frequency": "annual",
+      "kind": "insurance",
+      "insuredBy": "Self",
+      "policyNo": "DEMO-INS-001",
+      "beneficiary": "Spouse",
+      "coverage": 20000,
+      "endDate": "2035-07-01",
+      "note": "DEMO：终身寿保额 USD 2 万"
+    },
+    {
+      "key": "ins_life_wife",
+      "name": "终身寿/重疾 · Spouse",
+      "ccy": "USD",
+      "amount": 550,
+      "frequency": "annual",
+      "kind": "insurance",
+      "insuredBy": "Spouse",
+      "policyNo": "DEMO-INS-002",
+      "beneficiary": "Self",
+      "coverage": 20000,
+      "endDate": "2035-10-01",
+      "note": "DEMO：终身寿保额 USD 2 万"
+    },
+    {
+      "key": "ins_ci_kid_long",
+      "name": "重疾 · Kid1",
+      "ccy": "USD",
+      "amount": 380,
+      "frequency": "annual",
+      "kind": "insurance",
+      "insuredBy": "Kid1",
+      "policyNo": "DEMO-INS-003",
+      "beneficiary": "Spouse",
+      "coverage": 15000,
+      "endDate": "2042-07-01",
+      "note": "DEMO：大儿子Kid1 重疾保额 USD 1.5 万"
+    },
+    {
+      "key": "ins_ci_self",
+      "name": "重疾 · Self",
+      "ccy": "USD",
+      "amount": 400,
+      "frequency": "annual",
+      "kind": "insurance",
+      "insuredBy": "Self",
+      "policyNo": "DEMO-INS-004",
+      "beneficiary": "Spouse",
+      "coverage": 15000,
+      "endDate": "2043-11-15"
+    },
+    {
+      "key": "ins_ci_wife",
+      "name": "重疾 · Spouse",
+      "ccy": "USD",
+      "amount": 380,
+      "frequency": "annual",
+      "kind": "insurance",
+      "insuredBy": "Spouse",
+      "policyNo": "DEMO-INS-005",
+      "beneficiary": "Self",
+      "coverage": 15000,
+      "endDate": "2043-11-15"
+    },
+    {
+      "key": "ins_ci_kid_tiger",
+      "name": "少儿重疾 · Kid2 50w",
+      "ccy": "RMB",
+      "amount": 800,
+      "frequency": "annual",
+      "kind": "insurance",
+      "insuredBy": "Kid2",
+      "policyNo": "DEMO-INS-006",
+      "beneficiary": "Spouse",
+      "coverage": 500000,
+      "endDate": "2055-12-31",
+      "note": "DEMO：小女儿Kid2少儿重疾保额 50w"
+    }
+  ]
+}

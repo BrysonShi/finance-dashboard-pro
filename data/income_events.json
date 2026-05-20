@@ -1,0 +1,18 @@
+{
+  "note": "DEMO 一次性收入事件。和 recurring.json 的循环收入互补：\n- recurring.json: 工资 / 房租（按月或按年发生）\n- income_events.json: 股票兑现 / 项目分红 / 单点奖金 等单点事件\n\nDEMO 留空，朋友拿到后按需填。schema 字段示意见下方注释（可删）。",
+
+  "_schema_example": {
+    "key":   "your_event_key",
+    "year":  2026,
+    "month": 9,
+    "amount": 80000,
+    "ccy":   "RMB",
+    "kind":  "stock_vest | bonus | side_gig | other",
+    "name":  "事件名称",
+    "confidence": 0.8,
+    "assumptions": "可选：估算口径说明",
+    "note":  "可选：备注"
+  },
+
+  "events": []
+}

@@ -1,0 +1,374 @@
+{
+  "note": "DEMO 历史快照。每次更新 append 一条，永不覆盖。日期升序。\n\n字段约定：\n- holdings[key] 形态有两种：\n  - 现金类：{ raw: <原币种金额> }\n  - 证券类：{ shares: <股数>, cost: <每股成本价> }（搭配 prices[key] 使用）\n- prices[key] = { ccy, price } 当前股价\n- cashFlow.deposits/withdrawals 这期间净注入/赎回，用来剥离『真实市场回报』",
+  "snapshots": [
+    {
+      "date": "2024-12-31",
+      "rates": {
+        "USD": 7.3,
+        "HKD": 0.94
+      },
+      "ratesSource": "示例汇率（2024 年末）",
+      "comment": "DEMO：首次建档。规模较小，海外仓位偏少；从这里开始定期报数。",
+      "cashFlow": null,
+      "prices": {
+        "voo": {
+          "ccy": "USD",
+          "price": 540.0
+        },
+        "qqqm": {
+          "ccy": "USD",
+          "price": 215.0
+        },
+        "brk_b": {
+          "ccy": "USD",
+          "price": 450.0
+        },
+        "iau_gold": {
+          "ccy": "USD",
+          "price": 50.0
+        },
+        "tencent_futu": {
+          "ccy": "HKD",
+          "price": 410.0
+        },
+        "tencent_zhongyin": {
+          "ccy": "HKD",
+          "price": 410.0
+        },
+        "tencent_zhaoshang": {
+          "ccy": "HKD",
+          "price": 410.0
+        },
+        "etf_512890": {
+          "ccy": "RMB",
+          "price": 1.05
+        }
+      },
+      "holdings": {
+        "weizhong_demand": {
+          "raw": 50000
+        },
+        "futu_mmf_usd": {
+          "raw": 2000
+        },
+        "us_treasury": {
+          "raw": 1000
+        },
+        "qianhai_property": {
+          "raw": 1000000
+        },
+        "voo": {
+          "shares": 30,
+          "cost": 520.0
+        },
+        "qqqm": {
+          "shares": 15,
+          "cost": 200.0
+        },
+        "brk_b": {
+          "shares": 5,
+          "cost": 440.0
+        },
+        "iau_gold": {
+          "shares": 100,
+          "cost": 48.0
+        },
+        "tencent_futu": {
+          "shares": 50,
+          "cost": 540.0
+        },
+        "tencent_zhongyin": {
+          "shares": 100,
+          "cost": 380.0
+        },
+        "tencent_zhaoshang": {
+          "shares": 30,
+          "cost": 600.0
+        },
+        "etf_512890": {
+          "shares": 25000,
+          "cost": 1.1
+        }
+      }
+    },
+    {
+      "date": "2025-06-30",
+      "rates": {
+        "USD": 7.18,
+        "HKD": 0.92
+      },
+      "ratesSource": "示例汇率（2025 年中）",
+      "comment": "Q2 复盘：用工资加仓 VOO + 国债，腾讯小幅反弹。",
+      "cashFlow": {
+        "deposits": 50000,
+        "withdrawals": 0
+      },
+      "prices": {
+        "voo": {
+          "ccy": "USD",
+          "price": 595.0
+        },
+        "qqqm": {
+          "ccy": "USD",
+          "price": 240.0
+        },
+        "brk_b": {
+          "ccy": "USD",
+          "price": 465.0
+        },
+        "iau_gold": {
+          "ccy": "USD",
+          "price": 65.0
+        },
+        "tencent_futu": {
+          "ccy": "HKD",
+          "price": 430.0
+        },
+        "tencent_zhongyin": {
+          "ccy": "HKD",
+          "price": 430.0
+        },
+        "tencent_zhaoshang": {
+          "ccy": "HKD",
+          "price": 430.0
+        },
+        "etf_512890": {
+          "ccy": "RMB",
+          "price": 1.1
+        }
+      },
+      "holdings": {
+        "weizhong_demand": {
+          "raw": 65000
+        },
+        "futu_mmf_usd": {
+          "raw": 3000
+        },
+        "us_treasury": {
+          "raw": 1500
+        },
+        "qianhai_property": {
+          "raw": 1050000
+        },
+        "voo": {
+          "shares": 40,
+          "cost": 555.0
+        },
+        "qqqm": {
+          "shares": 20,
+          "cost": 215.0
+        },
+        "brk_b": {
+          "shares": 6,
+          "cost": 445.0
+        },
+        "iau_gold": {
+          "shares": 150,
+          "cost": 56.0
+        },
+        "tencent_futu": {
+          "shares": 50,
+          "cost": 540.0
+        },
+        "tencent_zhongyin": {
+          "shares": 130,
+          "cost": 380.0
+        },
+        "tencent_zhaoshang": {
+          "shares": 30,
+          "cost": 600.0
+        },
+        "etf_512890": {
+          "shares": 30000,
+          "cost": 1.1
+        }
+      }
+    },
+    {
+      "date": "2025-12-31",
+      "rates": {
+        "USD": 7.05,
+        "HKD": 0.9
+      },
+      "ratesSource": "示例汇率（2025 年末）",
+      "comment": "年底盘点：腾讯季报超预期 + 美股纳指年线收涨；A 股红利稳。",
+      "cashFlow": {
+        "deposits": 40000,
+        "withdrawals": 0
+      },
+      "prices": {
+        "voo": {
+          "ccy": "USD",
+          "price": 640.0
+        },
+        "qqqm": {
+          "ccy": "USD",
+          "price": 270.0
+        },
+        "brk_b": {
+          "ccy": "USD",
+          "price": 478.0
+        },
+        "iau_gold": {
+          "ccy": "USD",
+          "price": 78.0
+        },
+        "tencent_futu": {
+          "ccy": "HKD",
+          "price": 460.0
+        },
+        "tencent_zhongyin": {
+          "ccy": "HKD",
+          "price": 460.0
+        },
+        "tencent_zhaoshang": {
+          "ccy": "HKD",
+          "price": 460.0
+        },
+        "etf_512890": {
+          "ccy": "RMB",
+          "price": 1.14
+        }
+      },
+      "holdings": {
+        "weizhong_demand": {
+          "raw": 75000
+        },
+        "futu_mmf_usd": {
+          "raw": 4000
+        },
+        "us_treasury": {
+          "raw": 2000
+        },
+        "qianhai_property": {
+          "raw": 1080000
+        },
+        "voo": {
+          "shares": 50,
+          "cost": 580.0
+        },
+        "qqqm": {
+          "shares": 25,
+          "cost": 225.0
+        },
+        "brk_b": {
+          "shares": 7,
+          "cost": 460.0
+        },
+        "iau_gold": {
+          "shares": 180,
+          "cost": 62.0
+        },
+        "tencent_futu": {
+          "shares": 50,
+          "cost": 540.0
+        },
+        "tencent_zhongyin": {
+          "shares": 150,
+          "cost": 380.0
+        },
+        "tencent_zhaoshang": {
+          "shares": 30,
+          "cost": 600.0
+        },
+        "etf_512890": {
+          "shares": 33000,
+          "cost": 1.1
+        }
+      }
+    },
+    {
+      "date": "2026-05-17",
+      "rates": {
+        "USD": 6.8229,
+        "HKD": 0.8713
+      },
+      "ratesSource": "open.er-api.com (2026-05-17)",
+      "comment": "DEMO 当前快照。普通中产家庭，总盘约 185 万。",
+      "cashFlow": {
+        "deposits": 20000,
+        "withdrawals": 0
+      },
+      "prices": {
+        "voo": {
+          "ccy": "USD",
+          "price": 679.44
+        },
+        "qqqm": {
+          "ccy": "USD",
+          "price": 291.89
+        },
+        "brk_b": {
+          "ccy": "USD",
+          "price": 482.7
+        },
+        "iau_gold": {
+          "ccy": "USD",
+          "price": 85.51
+        },
+        "tencent_futu": {
+          "ccy": "HKD",
+          "price": 456.4
+        },
+        "tencent_zhongyin": {
+          "ccy": "HKD",
+          "price": 456.4
+        },
+        "tencent_zhaoshang": {
+          "ccy": "HKD",
+          "price": 456.4
+        },
+        "etf_512890": {
+          "ccy": "RMB",
+          "price": 1.167
+        }
+      },
+      "holdings": {
+        "weizhong_demand": {
+          "raw": 80000
+        },
+        "futu_mmf_usd": {
+          "raw": 5000
+        },
+        "us_treasury": {
+          "raw": 2000
+        },
+        "qianhai_property": {
+          "raw": 1100000
+        },
+        "voo": {
+          "shares": 60,
+          "cost": 620.0
+        },
+        "qqqm": {
+          "shares": 30,
+          "cost": 250.0
+        },
+        "brk_b": {
+          "shares": 8,
+          "cost": 480.0
+        },
+        "iau_gold": {
+          "shares": 200,
+          "cost": 70.0
+        },
+        "tencent_futu": {
+          "shares": 50,
+          "cost": 540.0
+        },
+        "tencent_zhongyin": {
+          "shares": 150,
+          "cost": 380.0
+        },
+        "tencent_zhaoshang": {
+          "shares": 30,
+          "cost": 600.0
+        },
+        "etf_512890": {
+          "shares": 35000,
+          "cost": 1.1
+        }
+      }
+    }
+  ]
+}
