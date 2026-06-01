@@ -1,0 +1,49 @@
+{
+  "source": "世界黄金协会 (World Gold Council)",
+  "updated": "2026-Q1",
+  "note": "数据来源：世界黄金协会季度《全球黄金需求趋势报告》",
+  "total_2025": 863,
+  "total_2024": 1045,
+  "countries": [
+    {
+      "name": "中国",
+      "code": "CN",
+      "consecutive_months": 18,
+      "latest_monthly_tonnes": 5.0,
+      "trend": "增持",
+      "note": "2025年全年增持约60吨，连续18个月净增持",
+      "impact": "利好"
+    },
+    {
+      "name": "印度",
+      "code": "IN",
+      "consecutive_months": 12,
+      "latest_monthly_tonnes": 3.0,
+      "trend": "增持",
+      "note": "2025年增持约35吨，创历史新高",
+      "impact": "利好"
+    },
+    {
+      "name": "波兰",
+      "code": "PL",
+      "consecutive_months": 24,
+      "latest_monthly_tonnes": 2.0,
+      "trend": "增持",
+      "note": "2025年增持约90吨，连续2年增持超80吨",
+      "impact": "利好"
+    },
+    {
+      "name": "土耳其",
+      "code": "TR",
+      "consecutive_months": 8,
+      "latest_monthly_tonnes": 4.0,
+      "trend": "增持",
+      "note": "2025年增持约55吨，去美元化持续",
+      "impact": "利好"
+    }
+  ],
+  "market_impact": {
+    "description": "央行购金为金价提供长期支撑",
+    "mechanism": "去美元化+外汇储备多元化+避险需求"
+  }
+}

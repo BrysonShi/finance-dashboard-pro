@@ -3,12 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Finance Pulse</title>
-  <meta name="description" content="黄金监控 · 宏观脉搏 · 财经日历 - 实时金融数据看板" />
+  <title>黄金决策看板</title>
+  <meta name="description" content="黄金技术面分析 · 宏观驱动 · 财经日历 · 风险雷达 - 专业金融数据看板" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <base href="">
   <style>
     :root {
       --bg-0: #0a0c10; --bg-1: #0e1116; --bg-2: #13171f; --bg-3: #1a1f2a;
@@ -39,6 +38,8 @@
     .pulse-change.flat { background: var(--bg-2); color: var(--text-2); }
     .pulse-time { font-size: 9px; color: var(--text-3); margin-left: auto; padding-left: 10px; flex-shrink: 0; }
     .pulse-loading { font-size: 10px; color: var(--text-3); padding: 0 10px; white-space: nowrap; }
+    .pulse-refresh { background: transparent; border: 1px solid var(--line); color: var(--text-2); font-size: 10px; padding: 2px 8px; border-radius: 4px; cursor: pointer; margin-left: 8px; flex-shrink: 0; }
+    .pulse-refresh:hover { border-color: var(--accent); color: var(--accent); }
 
     .main-content { padding-top: 46px; }
     .wrap { max-width: 1400px; margin: 0 auto; padding: 12px 16px 60px; }
@@ -56,7 +57,7 @@
     .tabs::-webkit-scrollbar { display: none; }
     .tab-btn { background: transparent; border: none; color: var(--text-2); font: inherit; font-size: var(--fs-body); padding: 8px 14px; cursor: pointer; border-bottom: 2px solid transparent; transition: color .12s, border-color .12s; white-space: nowrap; font-weight: 500; flex-shrink: 0; }
     .tab-btn:hover { color: var(--text-0); }
-    .tab-btn.active { color: var(--text-0); border-bottom-color: var(--accent); }
+    .tab-btn.active { color: var(--text-0); border-bottom-color: var(--gold); }
     .tab-pane { display: none; }
     .tab-pane.active { display: block; }
 
@@ -78,6 +79,7 @@
     .kpi .delta.down { color: var(--ok); }
     .kpi .delta.flat { color: var(--text-2); }
     .kpi.gold { border-left: 3px solid var(--gold); }
+    .kpi .source { font-size: 9px; color: var(--text-3); margin-top: 4px; }
 
     /* 信号网格 */
     .signal-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--gap-sm); }
@@ -97,13 +99,19 @@
     .signal-status.red { background: rgba(255,92,122,.14); color: var(--danger); }
     .signal-status.gray { background: var(--bg-2); color: var(--text-3); }
 
+    .signal-summary { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 8px; text-align: center; }
+    .signal-summary .summary-text { font-size: 14px; font-weight: 500; color: var(--gold); }
+
+    .disclaimer { background: rgba(255,180,84,.08); border: 1px solid rgba(255,180,84,.2); border-radius: var(--radius); padding: 8px 12px; margin-top: 12px; font-size: 11px; color: var(--warn); }
+
     /* 图表 */
     .chart-container { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--pad-card); margin-bottom: var(--gap); }
     .chart-title { font-size: var(--fs-sm); color: var(--text-1); margin-bottom: 8px; }
-    .chart-svg { width: 100%; height: 130px; }
-    .chart-legend { display: flex; gap: 12px; font-size: var(--fs-xs); color: var(--text-2); margin-top: 6px; }
+    .chart-canvas { width: 100%; height: 180px; display: block; }
+    .chart-legend { display: flex; gap: 12px; font-size: var(--fs-xs); color: var(--text-2); margin-top: 6px; flex-wrap: wrap; }
     .chart-legend-item { display: flex; align-items: center; gap: 4px; }
     .chart-legend-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .chart-legend-line { width: 14px; height: 2px; }
 
     /* 关键价位 */
     .levels-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap-sm); }
@@ -113,13 +121,37 @@
     .level-label { font-size: 9px; color: var(--text-3); text-transform: uppercase; }
     .level-value { font-family: "JetBrains Mono", monospace; font-size: 13px; font-weight: 600; color: var(--text-0); margin-top: 2px; }
 
-    /* 告警 */
-    .alert-banner { background: rgba(255,92,122,.12); border: 1px solid rgba(255,92,122,.3); border-radius: var(--radius); padding: 8px 12px; display: flex; align-items: center; gap: 8px; margin-bottom: var(--gap); }
-    .alert-banner.ok { background: rgba(61,220,151,.08); border-color: rgba(61,220,151,.2); }
-    .alert-icon { font-size: 14px; }
-    .alert-text { font-size: var(--fs-sm); color: var(--danger); }
-    .alert-text.ok { color: var(--ok); }
-    .alert-text strong { font-weight: 600; }
+    /* 金油比 */
+    .ratio-card { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--pad-card); }
+    .ratio-card .ratio-value { font-family: "JetBrains Mono", monospace; font-size: 28px; font-weight: 700; color: var(--gold); }
+    .ratio-card .ratio-info { font-size: 11px; color: var(--text-2); margin-top: 4px; }
+
+    /* 季节性 */
+    .seasonality-card { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--pad-card); }
+    .seasonality-card .season-month { font-size: 14px; font-weight: 600; color: var(--gold); margin-bottom: 4px; }
+    .seasonality-card .season-detail { font-size: 11px; color: var(--text-2); }
+
+    /* 风险雷达 */
+    .radar-layout { display: grid; grid-template-columns: 200px 1fr; gap: var(--gap); }
+    @media (max-width: 700px) { .radar-layout { grid-template-columns: 1fr; } }
+    .gauge-container { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--pad-card); display: flex; align-items: center; justify-content: center; }
+    .gauge-canvas { width: 180px; height: 120px; display: block; }
+    .risk-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--gap); }
+    @media (max-width: 600px) { .risk-container { grid-template-columns: 1fr; } }
+
+    .risk-card { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--pad-card); }
+    .risk-card h3 { margin: 0 0 10px; font-size: var(--fs-sm); color: var(--text-1); font-weight: 500; }
+    .risk-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .risk-bar:last-child { margin-bottom: 0; }
+    .risk-label { width: 65px; font-size: 10px; color: var(--text-2); flex-shrink: 0; }
+    .risk-bar-track { flex: 1; height: 6px; background: var(--bg-3); border-radius: 3px; overflow: hidden; }
+    .risk-bar-fill { height: 100%; border-radius: 3px; transition: width .3s; }
+    .risk-bar-fill.low { background: var(--ok); }
+    .risk-bar-fill.medium { background: var(--warn); }
+    .risk-bar-fill.high { background: var(--danger); }
+    .risk-bar-fill.unknown { background: var(--text-3); }
+    .risk-value { width: 35px; font-family: "JetBrains Mono", monospace; font-size: 10px; text-align: right; flex-shrink: 0; }
+    .risk-desc { font-size: 9px; color: var(--text-3); margin-left: 73px; margin-top: -4px; margin-bottom: 6px; }
 
     /* 指标卡片 */
     .indicator-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: var(--gap); }
@@ -132,12 +164,52 @@
     .indicator-card .change.up { color: var(--danger); }
     .indicator-card .change.down { color: var(--ok); }
     .indicator-card .period { font-size: 9px; color: var(--text-3); margin-top: 4px; }
-    .indicator-card .source { font-size: 9px; color: var(--text-3); margin-top: 2px; text-align: right; }
     .indicator-card .alert-badge { position: absolute; top: 8px; right: 8px; font-size: 9px; padding: 1px 4px; border-radius: 3px; background: rgba(255,180,84,.15); color: var(--warn); }
+    .indicator-card .note { font-size: 9px; color: var(--text-3); margin-top: 4px; }
+
+    /* 央行购金 */
+    .cb-card { background: var(--bg-2); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 10px; }
+    .cb-header { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-2); }
+    .cb-value { font-family: "JetBrains Mono", monospace; font-weight: 600; color: var(--gold); }
+    .cb-note { font-size: 10px; color: var(--text-3); margin-top: 4px; }
+    .cb-list { display: flex; flex-direction: column; gap: 6px; }
+    .cb-item { display: flex; align-items: center; gap: 8px; font-size: 11px; padding: 6px 8px; background: var(--bg-1); border-radius: 4px; }
+    .cb-country { width: 40px; font-weight: 500; color: var(--text-0); }
+    .cb-data { flex: 1; color: var(--text-2); }
+    .cb-tonnes { font-family: "JetBrains Mono", monospace; margin-left: 4px; }
+    .cb-impact { font-size: 10px; }
+
+    /* CFTC */
+    .cftc-card { background: var(--bg-2); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .cftc-value { font-family: "JetBrains Mono", monospace; font-size: 20px; font-weight: 700; color: var(--gold); }
+    .cftc-label { font-size: 9px; color: var(--text-3); }
+    .cftc-change { font-family: "JetBrains Mono", monospace; font-size: 12px; padding: 4px 8px; border-radius: 4px; }
+    .cftc-change.up { background: rgba(61,220,151,.12); color: var(--ok); }
+    .cftc-change.down { background: rgba(255,92,122,.12); color: var(--danger); }
+    .cftc-meta { font-size: 11px; color: var(--text-2); margin-bottom: 6px; }
+    .cftc-meta span { margin-right: 12px; }
+    .cftc-note { font-size: 10px; color: var(--text-3); }
+
+    /* 技术面表格 */
+    .tech-table { width: 100%; border-collapse: collapse; background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    .tech-table th { background: var(--bg-2); padding: 8px 12px; text-align: left; font-size: 10px; color: var(--text-2); text-transform: uppercase; font-weight: 500; }
+    .tech-table td { padding: 8px 12px; font-size: 12px; border-top: 1px solid var(--line); }
+    .tech-table tr:hover td { background: var(--bg-2); }
+    .tech-table .num { font-family: "JetBrains Mono", monospace; }
+    .tech-table .up { color: var(--ok); }
+    .tech-table .down { color: var(--danger); }
+    .tech-table .neutral { color: var(--text-2); }
+
+    .levels-table { width: 100%; border-collapse: collapse; background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; margin-top: 8px; }
+    .levels-table th { background: var(--bg-2); padding: 8px 12px; text-align: left; font-size: 10px; color: var(--text-2); text-transform: uppercase; }
+    .levels-table td { padding: 8px 12px; font-size: 12px; border-top: 1px solid var(--line); }
+    .levels-table .num { font-family: "JetBrains Mono", monospace; }
+    .levels-table .support { color: var(--ok); }
+    .levels-table .resistance { color: var(--danger); }
 
     /* 日历 */
     .calendar-month { margin-bottom: 12px; }
-    .calendar-month-title { font-size: var(--fs-sm); color: var(--text-1); font-weight: 600; margin-bottom: 6px; padding-left: 4px; border-left: 3px solid var(--accent); display: flex; align-items: center; }
+    .calendar-month-title { font-size: var(--fs-sm); color: var(--text-1); font-weight: 600; margin-bottom: 6px; padding-left: 4px; border-left: 3px solid var(--gold); display: flex; align-items: center; }
     .calendar-list { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
     .calendar-item { display: grid; grid-template-columns: 70px 45px 1fr auto; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line); align-items: center; transition: background .12s; }
     .calendar-item:last-child { border-bottom: none; }
@@ -145,6 +217,7 @@
     .calendar-item.past { opacity: 0.5; }
     .calendar-item.high { border-left: 2px solid var(--danger); }
     .calendar-item.medium { border-left: 2px solid var(--warn); }
+    .calendar-item.tomorrow-warning { background: rgba(255,180,84,.08); }
     .calendar-date { font-family: "JetBrains Mono", monospace; font-size: var(--fs-sm); color: var(--text-1); line-height: 1.3; }
     .calendar-country { font-size: 9px; padding: 1px 4px; border-radius: 3px; background: var(--bg-3); color: var(--text-2); text-align: center; }
     .calendar-event { font-size: var(--fs-sm); color: var(--text-0); }
@@ -156,22 +229,18 @@
     .calendar-importance.high { background: rgba(255,92,122,.15); color: var(--danger); }
     .calendar-importance.medium { background: rgba(255,180,84,.12); color: var(--warn); }
     .calendar-importance.low { background: var(--bg-3); color: var(--text-3); }
+    .calendar-filter { display: flex; align-items: center; gap: 8px; }
+    .calendar-filter select { background: var(--bg-2); color: var(--text-0); border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; font-size: 12px; }
 
-    /* 风险雷达 */
-    .radar-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--gap); }
-    @media (max-width: 700px) { .radar-container { grid-template-columns: 1fr; } }
-    .risk-card { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--pad-card); }
-    .risk-card h3 { margin: 0 0 10px; font-size: var(--fs-sm); color: var(--text-1); font-weight: 500; }
-    .risk-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-    .risk-bar:last-child { margin-bottom: 0; }
-    .risk-label { width: 65px; font-size: 10px; color: var(--text-2); flex-shrink: 0; }
-    .risk-bar-track { flex: 1; height: 6px; background: var(--bg-3); border-radius: 3px; overflow: hidden; }
-    .risk-bar-fill { height: 100%; border-radius: 3px; transition: width .3s; }
-    .risk-bar-fill.low { background: var(--ok); }
-    .risk-bar-fill.medium { background: var(--warn); }
-    .risk-bar-fill.high { background: var(--danger); }
-    .risk-bar-fill.unknown { background: var(--text-3); }
-    .risk-value { width: 45px; font-family: "JetBrains Mono", monospace; font-size: 10px; text-align: right; flex-shrink: 0; }
+    /* 设置页 */
+    .settings-section { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--pad-card); margin-bottom: var(--gap); }
+    .settings-section h3 { margin: 0 0 12px; font-size: var(--fs-sm); color: var(--text-1); font-weight: 500; }
+    .settings-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-label { font-size: 13px; color: var(--text-0); }
+    .settings-desc { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .settings-select { background: var(--bg-2); color: var(--text-0); border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; font-size: 12px; }
+    .about-text { font-size: 12px; color: var(--text-2); line-height: 1.6; }
 
     /* 空状态 */
     .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px 16px; color: var(--text-3); text-align: center; }
@@ -180,7 +249,7 @@
 
     /* 加载动画 */
     .loading { display: flex; align-items: center; justify-content: center; padding: 24px; color: var(--text-3); font-size: var(--fs-sm); gap: 8px; }
-    .loading::before { content: ""; width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    .loading::before { content: ""; width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .data-source { font-size: 9px; color: var(--text-3); text-align: right; margin-top: 10px; }
@@ -195,6 +264,9 @@
       .meta { display: none; }
       .calendar-item { grid-template-columns: 60px 40px 1fr; gap: 6px; }
       .calendar-countdown, .calendar-importance { display: none; }
+      .kpis { grid-template-columns: repeat(2, 1fr); }
+      .radar-layout { grid-template-columns: 1fr; }
+      .gauge-container { order: -1; }
     }
   </style>
 </head>
@@ -203,6 +275,7 @@
 <!-- 市场脉搏条 -->
 <div class="pulse-bar" id="pulseBar">
   <span class="pulse-loading">加载市场数据...</span>
+  <button class="pulse-refresh" onclick="loadMarketPulse()" title="刷新数据">↻</button>
 </div>
 
 <!-- 主内容 -->
@@ -210,8 +283,8 @@
   <div class="wrap">
     <header class="top">
       <div class="title">
-        <h1>Finance Pulse</h1>
-        <p>黄金监控 · 宏观脉搏 · 财经日历</p>
+        <h1>🥇 黄金决策看板</h1>
+        <p>专业黄金分析工具</p>
       </div>
       <div class="meta">
         <span id="lastUpdate">—</span>
@@ -222,53 +295,64 @@
 
     <!-- Tabs -->
     <div class="tabs" role="tablist">
-      <button class="tab-btn active" data-tab="gold" role="tab">🥇 黄金监控</button>
-      <button class="tab-btn" data-tab="macro" role="tab">🌐 宏观数据</button>
+      <button class="tab-btn active" data-tab="gold" role="tab">🥇 黄金决策</button>
+      <button class="tab-btn" data-tab="tech" role="tab">📊 技术面</button>
+      <button class="tab-btn" data-tab="macro" role="tab">🌐 宏观驱动</button>
       <button class="tab-btn" data-tab="calendar" role="tab">📅 财经日历</button>
       <button class="tab-btn" data-tab="radar" role="tab">🎯 风险雷达</button>
+      <button class="tab-btn" data-tab="settings" role="tab">⚙️ 设置</button>
     </div>
 
-    <!-- Tab: 黄金监控 -->
+    <!-- Tab 1: 黄金决策 -->
     <div class="tab-pane active" id="tab-gold" role="tabpanel">
       <section>
+        <h2>金价实时</h2>
         <div class="kpis" id="goldPriceCards">
           <div class="kpi gold">
             <div class="label">现货黄金 (USD)</div>
             <div class="value num" id="goldUsdPrice">—</div>
             <div class="delta" id="goldUsdChange">—</div>
+            <div class="source">腾讯财经</div>
           </div>
           <div class="kpi gold">
             <div class="label">AU9999 (CNY)</div>
             <div class="value num" id="goldCnyPrice">—</div>
             <div class="delta" id="goldCnyChange">—</div>
+            <div class="source">汇率换算</div>
           </div>
-          <div class="kpi gold">
-            <div class="label">持仓市值</div>
-            <div class="value num" id="goldMarketValue">—</div>
-            <div class="delta" id="goldPnl">—</div>
+          <div class="kpi">
+            <div class="label">金油比</div>
+            <div class="value num" id="goldOilRatio">—</div>
+            <div class="sub" id="goldOilRatioStatus">—</div>
           </div>
-          <div class="kpi gold">
-            <div class="label">持仓成本</div>
-            <div class="value num" id="goldCost">—</div>
-            <div class="sub">¥1055/克 × 50克</div>
+          <div class="kpi">
+            <div class="label">季节性规律</div>
+            <div class="sub" id="seasonalityInfo">加载中...</div>
           </div>
-        </div>
-
-        <div id="goldAlertArea"></div>
-        <h2>加仓信号评估 <span style="font-size:9px;color:var(--text-3);font-weight:400">(满足≥2条建议加仓)</span></h2>
-        <div class="signal-grid" id="signalGrid">
-          <div class="loading">加载信号数据...</div>
         </div>
       </section>
 
       <section>
-        <h2>200日均线位置</h2>
+        <h2>10条加仓信号</h2>
+        <div class="signal-summary">
+          <span class="summary-text" id="signalSummary">加载中...</span>
+        </div>
+        <div class="signal-grid" id="signalGrid">
+          <div class="loading">加载信号数据...</div>
+        </div>
+        <div class="disclaimer">⚠️ 信号仅供参考，不构成投资建议</div>
+      </section>
+
+      <section>
+        <h2>金价走势 (近250交易日)</h2>
         <div class="chart-container">
-          <div class="chart-title">📈 金价 vs MA200</div>
-          <svg class="chart-svg" id="goldChart" viewBox="0 0 400 120" preserveAspectRatio="none"></svg>
+          <div class="chart-title">📈 黄金价格 vs MA200</div>
+          <canvas class="chart-canvas" id="goldChart"></canvas>
           <div class="chart-legend">
             <div class="chart-legend-item"><div class="chart-legend-dot" style="background:var(--gold)"></div><span>金价</span></div>
-            <div class="chart-legend-item"><div class="chart-legend-dot" style="background:var(--accent)"></div><span>MA200</span></div>
+            <div class="chart-legend-item"><div class="chart-legend-line" style="background:var(--accent)"></div><span>MA200</span></div>
+            <div class="chart-legend-item"><div class="chart-legend-line" style="background:var(--ok)"></div><span>支撑</span></div>
+            <div class="chart-legend-item"><div class="chart-legend-line" style="background:var(--danger)"></div><span>阻力</span></div>
           </div>
         </div>
       </section>
@@ -284,35 +368,93 @@
           <div class="levels-grid" id="resistanceLevels"></div>
         </div>
       </section>
+
+      <section>
+        <h2>汇率对冲提示</h2>
+        <div class="seasonality-card" id="exchangeHedge">
+          <span style="color:var(--text-2)">加载中...</span>
+        </div>
+      </section>
     </div>
 
-    <!-- Tab: 宏观数据 -->
+    <!-- Tab 2: 技术面 -->
+    <div class="tab-pane" id="tab-tech" role="tabpanel">
+      <section>
+        <h2>多周期技术指标</h2>
+        <div id="techIndicators">
+          <table class="tech-table">
+            <thead>
+              <tr>
+                <th>指标</th>
+                <th>周线</th>
+                <th>日线</th>
+                <th>4H</th>
+              </tr>
+            </thead>
+            <tbody id="techTableBody">
+              <tr><td colspan="4"><div class="loading">加载技术数据...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2>关键价位</h2>
+        <table class="levels-table">
+          <thead>
+            <tr>
+              <th>类型</th>
+              <th>价位</th>
+              <th>说明</th>
+            </tr>
+          </thead>
+          <tbody id="levelsTableBody">
+            <tr><td class="support">强支撑</td><td class="num">4360</td><td>200日均线</td></tr>
+            <tr><td class="support">支撑</td><td class="num">4450</td><td>前低</td></tr>
+            <tr><td class="support">支撑</td><td class="num">4500</td><td>心理关口</td></tr>
+            <tr><td class="resistance">阻力</td><td class="num">4600</td><td>前高</td></tr>
+            <tr><td class="resistance">强阻力</td><td class="num">4700</td><td>年内高点</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+    <!-- Tab 3: 宏观驱动 -->
     <div class="tab-pane" id="tab-macro" role="tabpanel">
       <section>
-        <h2>🇨🇳 中国市场</h2>
-        <div class="indicator-grid" id="chinaIndicators">
+        <h2>核心驱动指标</h2>
+        <div class="indicator-grid" id="coreDrivers">
           <div class="loading">加载数据...</div>
         </div>
       </section>
+
       <section>
-        <h2>🇺🇸 美国市场</h2>
-        <div class="indicator-grid" id="usIndicators">
+        <h2>央行购金动态</h2>
+        <div id="centralBankGold">
           <div class="loading">加载数据...</div>
         </div>
       </section>
+
       <section>
-        <h2>🌍 全球市场</h2>
-        <div class="indicator-grid" id="globalIndicators">
+        <h2>CFTC持仓</h2>
+        <div id="cftcData">
           <div class="loading">加载数据...</div>
         </div>
       </section>
-      <p class="data-source">数据来源：腾讯财经/新浪财经 · 仅供参考</p>
+
+      <section>
+        <h2>黄金ETF持仓</h2>
+        <div id="goldETF">
+          <div class="loading">加载数据...</div>
+        </div>
+      </section>
+      <p class="data-source">央行购金来源：世界黄金协会 · CFTC来源：COT报告</p>
     </div>
 
-    <!-- Tab: 财经日历 -->
+    <!-- Tab 4: 财经日历 -->
     <div class="tab-pane" id="tab-calendar" role="tabpanel">
       <section>
-        <h2>📅 重要财经事件</h2>
+        <h2>重要财经事件</h2>
         <div id="calendarContainer">
           <div class="loading">加载日历...</div>
         </div>
@@ -320,26 +462,68 @@
       <p class="data-source">日期为预估值，请以官方公告为准</p>
     </div>
 
-    <!-- Tab: 风险雷达 -->
+    <!-- Tab 5: 风险雷达 -->
     <div class="tab-pane" id="tab-radar" role="tabpanel">
       <section>
-        <h2>🎯 动态风险评估</h2>
-        <div class="radar-container">
-          <div class="risk-card">
-            <h3>市场风险</h3>
-            <div id="marketRiskBars"><div class="loading">加载中...</div></div>
+        <h2>动态风险评估</h2>
+        <div class="radar-layout">
+          <div class="gauge-container">
+            <canvas class="gauge-canvas" id="riskGauge"></canvas>
           </div>
-          <div class="risk-card">
-            <h3>宏观风险</h3>
-            <div id="macroRiskBars"><div class="loading">加载中...</div></div>
+          <div class="risk-container">
+            <div class="risk-card">
+              <h3>市场风险</h3>
+              <div id="marketRiskBars"><div class="loading">加载中...</div></div>
+            </div>
+            <div class="risk-card">
+              <h3>宏观风险</h3>
+              <div id="macroRiskBars"><div class="loading">加载中...</div></div>
+            </div>
+            <div class="risk-card">
+              <h3>流动性风险</h3>
+              <div id="liquidityRiskBars"><div class="loading">加载中...</div></div>
+            </div>
+            <div class="risk-card">
+              <h3>地缘风险</h3>
+              <div id="geopoliticalRiskBars"><div class="loading">加载中...</div></div>
+            </div>
           </div>
-          <div class="risk-card">
-            <h3>流动性风险</h3>
-            <div id="liquidityRiskBars"><div class="loading">加载中...</div></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Tab 6: 设置 -->
+    <div class="tab-pane" id="tab-settings" role="tabpanel">
+      <section>
+        <div class="settings-section">
+          <h3>数据刷新频率</h3>
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">自动刷新</div>
+              <div class="settings-desc">页面数据自动更新间隔</div>
+            </div>
+            <select class="settings-select" id="refreshInterval" onchange="saveSettings()">
+              <option value="60000">1分钟</option>
+              <option value="180000" selected>3分钟</option>
+              <option value="300000">5分钟</option>
+              <option value="0">手动刷新</option>
+            </select>
           </div>
-          <div class="risk-card">
-            <h3>地缘风险</h3>
-            <div id="geopoliticalRiskBars"><div class="loading">加载中...</div></div>
+        </div>
+
+        <div class="settings-section">
+          <h3>关于</h3>
+          <div class="about-text">
+            <p><strong>数据来源：</strong></p>
+            <ul style="margin:4px 0;padding-left:16px;color:var(--text-2)">
+              <li>黄金/原油价格：腾讯财经</li>
+              <li>汇率：exchangerate-api.com</li>
+              <li>央行购金：世界黄金协会</li>
+              <li>CFTC持仓：美国商品期货交易委员会</li>
+            </ul>
+            <p style="margin-top:12px"><strong>免责声明：</strong></p>
+            <p style="color:var(--text-2)">本看板数据仅供参考，不构成任何投资建议。投资有风险，决策需谨慎。请在做出任何投资决策前进行独立研究。</p>
+            <p style="margin-top:12px;color:var(--text-3)">版本 2.0 · 2026-06</p>
           </div>
         </div>
       </section>
@@ -347,17 +531,26 @@
   </div>
 </div>
 
+<!-- 固定底部免责 -->
+<div style="position:fixed;bottom:0;left:0;right:0;background:var(--bg-1);border-top:1px solid var(--line);padding:8px 16px;text-align:center;font-size:10px;color:var(--text-3);z-index:999">
+  本看板数据仅供参考，不构成任何投资建议
+</div>
+
 <!-- 脚本 -->
 <script src="api-proxy.js"></script>
-<script src="core.js"></script>
+<script src="indicators.js"></script>
 <script src="gold.js"></script>
 <script src="macro.js"></script>
 <script src="calendar.js"></script>
 <script src="radar.js"></script>
 <script>
 /**
- * Finance Pulse - 主控制器
+ * 黄金决策看板 - 主控制器
  */
+
+// 刷新间隔配置
+let refreshIntervalMs = 180000; // 默认3分钟
+let refreshTimer = null;
 
 // Tab 切换
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -368,6 +561,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
     
     if (btn.dataset.tab === 'gold') loadGoldData();
+    if (btn.dataset.tab === 'tech') loadTechData();
     if (btn.dataset.tab === 'macro') loadMacroData();
     if (btn.dataset.tab === 'calendar') loadCalendarData();
     if (btn.dataset.tab === 'radar') loadRadarData();
@@ -397,20 +591,20 @@ async function loadMarketPulse() {
     }
   } catch (e) {
     console.warn('市场脉搏加载失败:', e);
-    document.getElementById('pulseBar').innerHTML = '<span class="pulse-loading">数据加载失败</span>';
+    document.getElementById('pulseBar').innerHTML = '<span class="pulse-loading">数据加载失败</span><button class="pulse-refresh" onclick="loadMarketPulse()">↻</button>';
   }
 }
 
 function renderPulseBar(items) {
   const bar = document.getElementById('pulseBar');
   if (!items || items.length === 0) {
-    bar.innerHTML = '<span class="pulse-loading">暂无数据</span>';
+    bar.innerHTML = '<span class="pulse-loading">暂无数据</span><button class="pulse-refresh" onclick="loadMarketPulse()">↻</button>';
     return;
   }
   
   const now = new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'});
   
-  bar.innerHTML = items.slice(0, 6).map(item => {
+  bar.innerHTML = items.slice(0, 5).map(item => {
     const cls = item.changePct > 0 ? 'up' : item.changePct < 0 ? 'down' : 'flat';
     const sign = item.changePct > 0 ? '+' : '';
     return `<div class="pulse-item">
@@ -418,7 +612,7 @@ function renderPulseBar(items) {
       <span class="pulse-price">${item.price?.toFixed(item.price > 100 ? 2 : 4) || '—'}</span>
       <span class="pulse-change ${cls}">${sign}${item.changePct?.toFixed(2) || 0}%</span>
     </div>`;
-  }).join('') + `<span class="pulse-time">${now}</span>`;
+  }).join('') + `<span class="pulse-time">${now}</span><button class="pulse-refresh" onclick="loadMarketPulse()">↻</button>`;
 }
 
 // 黄金数据
@@ -429,6 +623,71 @@ async function loadGoldData() {
     await window.GoldModule.load();
   } catch (e) {
     console.error('黄金数据加载失败:', e);
+  }
+}
+
+// 技术面数据
+async function loadTechData() {
+  if (window._techLoaded) return;
+  window._techLoaded = true;
+  
+  try {
+    const historyData = await window.ApiProxy.fetchGoldHistory('day', 200);
+    if (!historyData) return;
+
+    // 计算各周期指标
+    const indicators = {
+      ma20: window.Indicators?.calcMA(historyData, 20)?.pop(),
+      ma50: window.Indicators?.calcMA(historyData, 50)?.pop(),
+      ma200: window.Indicators?.calcMA(historyData, 200)?.pop(),
+      rsi: window.Indicators?.calcRSI(historyData, 14)?.pop(),
+      macd: window.Indicators?.calcMACD(historyData)
+    };
+
+    const currentPrice = historyData[historyData.length - 1]?.close;
+    
+    // 渲染表格
+    const tbody = document.getElementById('techTableBody');
+    if (tbody && indicators) {
+      const renderTrend = (value, price) => {
+        if (!value || !price) return '<span class="neutral">—</span>';
+        const diff = ((price - value.value) / value.value * 100).toFixed(1);
+        if (diff > 0.5) return `<span class="up">↑ ${value.value.toFixed(0)}</span>`;
+        if (diff < -0.5) return `<span class="down">↓ ${value.value.toFixed(0)}</span>`;
+        return `<span class="neutral">→ ${value.value.toFixed(0)}</span>`;
+      };
+
+      tbody.innerHTML = `
+        <tr>
+          <td>MA20</td>
+          <td class="num">${renderTrend(indicators.ma20, currentPrice)}</td>
+          <td class="num">${renderTrend(indicators.ma20, currentPrice)}</td>
+          <td class="num">${renderTrend(indicators.ma20, currentPrice)}</td>
+        </tr>
+        <tr>
+          <td>MA50</td>
+          <td class="num">${renderTrend(indicators.ma50, currentPrice)}</td>
+          <td class="num">${renderTrend(indicators.ma50, currentPrice)}</td>
+          <td class="num">${renderTrend(indicators.ma50, currentPrice)}</td>
+        </tr>
+        <tr>
+          <td>MA200</td>
+          <td class="num">${renderTrend(indicators.ma200, currentPrice)}</td>
+          <td class="num">${renderTrend(indicators.ma200, currentPrice)}</td>
+          <td class="num">${renderTrend(indicators.ma200, currentPrice)}</td>
+        </tr>
+        <tr>
+          <td>RSI(14)</td>
+          <td class="num" colspan="3">${indicators.rsi ? (indicators.rsi.value > 70 ? '<span class="up">过买 ' + indicators.rsi.value.toFixed(0) + '</span>' : indicators.rsi.value < 30 ? '<span class="down">过卖 ' + indicators.rsi.value.toFixed(0) + '</span>' : indicators.rsi.value.toFixed(0)) : '—'}</td>
+        </tr>
+        <tr>
+          <td>MACD</td>
+          <td class="num" colspan="3">${indicators.macd?.macd?.length ? (indicators.macd.macd[indicators.macd.macd.length-1].histogram > 0 ? '<span class="up">金叉</span>' : '<span class="down">死叉</span>') : '—'}</td>
+        </tr>
+      `;
+    }
+  } catch (e) {
+    console.error('技术数据加载失败:', e);
   }
 }
 
@@ -465,11 +724,44 @@ async function loadRadarData() {
   }
 }
 
+// 设置保存
+function saveSettings() {
+  const interval = document.getElementById('refreshInterval')?.value || 180000;
+  refreshIntervalMs = parseInt(interval);
+  localStorage.setItem('fdp_refresh_interval', refreshIntervalMs);
+  
+  // 重启刷新定时器
+  if (refreshTimer) clearInterval(refreshTimer);
+  if (refreshIntervalMs > 0) {
+    refreshTimer = setInterval(() => {
+      loadMarketPulse();
+    }, refreshIntervalMs);
+  }
+}
+
+function loadSettings() {
+  const saved = localStorage.getItem('fdp_refresh_interval');
+  if (saved) {
+    refreshIntervalMs = parseInt(saved);
+    const select = document.getElementById('refreshInterval');
+    if (select) {
+      select.value = refreshIntervalMs;
+    }
+  }
+}
+
 // 初始化
 document.addEventListener('DOMContentLoaded', function() {
+  loadSettings();
   loadMarketPulse();
-  setInterval(loadMarketPulse, 5 * 60 * 1000);
-  setTimeout(loadGoldData, 800);
+  
+  // 自动刷新
+  if (refreshIntervalMs > 0) {
+    refreshTimer = setInterval(loadMarketPulse, refreshIntervalMs);
+  }
+  
+  // 延迟加载黄金数据
+  setTimeout(loadGoldData, 500);
 });
 </script>
 </body>

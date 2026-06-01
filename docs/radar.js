@@ -1,7 +1,6 @@
 /**
  * =============================================================
- * 风险雷达模块 - 动态风险评估
- * 根据实时市场数据计算风险等级
+ * 风险雷达模块 - Canvas仪表盘 + 四维风险评估
  * =============================================================
  */
 window.RadarModule = (function() {
@@ -10,63 +9,141 @@ window.RadarModule = (function() {
   let cachedData = null;
 
   // =============================================================
-  // 风险评估函数
+  // Canvas仪表盘绘制
+  // =============================================================
+
+  function drawGauge(canvasId, score, maxScore = 100) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const radius = Math.min(centerX, centerY) - 20;
+
+    // 清空
+    ctx.clearRect(0, 0, rect.width, rect.height);
+
+    // 背景弧
+    const startAngle = Math.PI * 0.75;
+    const endAngle = Math.PI * 2.25;
+    
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+    ctx.strokeStyle = '#1f2533';
+    ctx.lineWidth = 12;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // 渐变色弧（根据分数）
+    const scoreAngle = startAngle + (score / maxScore) * (endAngle - startAngle);
+    
+    // 创建渐变
+    const gradient = ctx.createLinearGradient(0, 0, rect.width, 0);
+    gradient.addColorStop(0, '#3ddc97');   // 绿
+    gradient.addColorStop(0.5, '#ffb454');  // 黄
+    gradient.addColorStop(1, '#ff5c7a');    // 红
+
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, startAngle, scoreAngle);
+    ctx.strokeStyle = score < 30 ? '#3ddc97' : score < 60 ? '#ffb454' : '#ff5c7a';
+    ctx.lineWidth = 12;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // 指针
+    const needleAngle = startAngle + (score / maxScore) * (endAngle - startAngle);
+    const needleLength = radius - 25;
+    const needleX = centerX + Math.cos(needleAngle) * needleLength;
+    const needleY = centerY + Math.sin(needleAngle) * needleLength;
+
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.lineTo(needleX, needleY);
+    ctx.strokeStyle = '#e8ecf3';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // 中心圆
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 8, 0, Math.PI * 2);
+    ctx.fillStyle = '#e8ecf3';
+    ctx.fill();
+
+    // 分数文字
+    ctx.fillStyle = '#e8ecf3';
+    ctx.font = 'bold 28px JetBrains Mono';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(Math.round(score), centerX, centerY + 5);
+
+    // 分数标签
+    ctx.fillStyle = '#5e677a';
+    ctx.font = '10px Inter';
+    ctx.fillText('风险指数', centerX, centerY + 22);
+
+    // 等级标签
+    let levelLabel = '低风险';
+    let levelColor = '#3ddc97';
+    if (score >= 60) {
+      levelLabel = '高风险';
+      levelColor = '#ff5c7a';
+    } else if (score >= 30) {
+      levelLabel = '中风险';
+      levelColor = '#ffb454';
+    }
+    
+    ctx.fillStyle = levelColor;
+    ctx.font = 'bold 11px Inter';
+    ctx.fillText(levelLabel, centerX, centerY + 38);
+  }
+
+  // =============================================================
+  // 风险计算
   // =============================================================
 
   /**
    * 计算市场风险
-   * - VIX > 25 = 高风险
-   * - VIX > 18 = 中风险
-   * - 金价波动率
-   * - DXY变化（暂无数据时标记为未知）
    */
-  function calculateMarketRisk(indices) {
-    const items = indices?.items || [];
-    
-    // 查找各指数
-    const gold = items.find(i => i.name?.includes('黄金'));
-    const crude = items.find(i => i.name?.includes('原油'));
-    const sh300 = items.find(i => i.name === '沪深300');
-    const hsi = items.find(i => i.name === '恒生指数');
-    const sp500 = items.find(i => i.name === '标普500');
-
-    // 市场风险评估
+  function calculateMarketRisk(data) {
     const risks = [];
+    
+    // 黄金30日波动率
+    const volatility = data.indicators?.volatility;
+    if (volatility != null) {
+      let level = 'low', value = Math.min(volatility * 4, 100), desc = `${volatility.toFixed(1)}%，正常水平`;
+      if (volatility > 15) { level = 'high'; desc = `${volatility.toFixed(1)}%，波动加剧`; }
+      else if (volatility > 10) { level = 'medium'; desc = `${volatility.toFixed(1)}%，波动适中`; }
+      risks.push({ label: '黄金波动率', level, value, desc, benchmark: '近1年45%分位' });
+    } else {
+      risks.push({ label: '黄金波动率', level: 'unknown', value: 0, desc: '数据暂不可用' });
+    }
 
-    // 1. A股市场风险（基于沪深300涨跌）
+    // 金油比异常
+    if (data.goldOilRatio) {
+      const ratio = data.goldOilRatio.value;
+      let level = 'low', value = Math.min(ratio * 2, 100), desc = data.goldOilRatio.comment;
+      if (ratio > 30) { level = 'high'; value = 80; }
+      else if (ratio > 25) { level = 'medium'; value = 55; }
+      risks.push({ label: '金油比', level, value, desc, benchmark: '正常区间15-25' });
+    }
+
+    // A股波动
+    const sh300 = data.marketIndices?.items?.find(i => i.name === '沪深300');
     if (sh300) {
       const pct = Math.abs(sh300.changePct || 0);
-      let level = 'low', value = pct * 10;
-      if (pct > 2) { level = 'high'; value = 80; }
-      else if (pct > 1) { level = 'medium'; value = 50; }
-      else { level = 'low'; value = 25; }
-      risks.push({ label: 'A股波动', level, value: Math.min(value, 100), description: `沪深300 ${sh300.changePct >= 0 ? '↑' : '↓'}${Math.abs(sh300.changePct).toFixed(2)}%` });
-    } else {
-      risks.push({ label: 'A股波动', level: 'unknown', value: 0, description: '数据待获取' });
-    }
-
-    // 2. 黄金波动风险
-    if (gold) {
-      const pct = Math.abs(gold.changePct || 0);
-      let level = 'low', value = pct * 15;
+      let level = 'low', value = pct * 8, desc = `${sh300.changePct >= 0 ? '↑' : '↓'}${pct.toFixed(2)}%`;
       if (pct > 2) { level = 'high'; value = 75; }
       else if (pct > 1) { level = 'medium'; value = 45; }
-      else { level = 'low'; value = 20; }
-      risks.push({ label: '黄金波动', level, value: Math.min(value, 100), description: `${gold.changePct >= 0 ? '↑' : '↓'}${Math.abs(gold.changePct).toFixed(2)}%` });
-    } else {
-      risks.push({ label: '黄金波动', level: 'unknown', value: 0, description: '数据待获取' });
-    }
-
-    // 3. 原油市场风险
-    if (crude) {
-      const pct = Math.abs(crude.changePct || 0);
-      let level = 'low', value = pct * 12;
-      if (pct > 4) { level = 'high'; value = 70; }
-      else if (pct > 2) { level = 'medium'; value = 40; }
-      else { level = 'low'; value = 20; }
-      risks.push({ label: '原油波动', level, value: Math.min(value, 100), description: `${crude.changePct >= 0 ? '↑' : '↓'}${Math.abs(crude.changePct).toFixed(2)}%` });
-    } else {
-      risks.push({ label: '原油波动', level: 'unknown', value: 0, description: '数据待获取' });
+      risks.push({ label: 'A股波动', level, value: Math.min(value, 100), desc });
     }
 
     return risks;
@@ -74,86 +151,60 @@ window.RadarModule = (function() {
 
   /**
    * 计算宏观风险
-   * - CPI > 3% = 高通胀风险（暂无数据时标记为未知）
-   * - 美债收益率 > 4.5% = 高利率风险（暂无数据）
-   * - 基于市场整体趋势
    */
-  function calculateMacroRisk(indices) {
-    const items = indices?.items || [];
+  function calculateMacroRisk(data) {
     const risks = [];
 
-    // 基于市场综合判断
-    let avgChange = 0;
-    let count = 0;
-    items.forEach(item => {
-      if (item.changePct != null) {
-        avgChange += item.changePct;
-        count++;
-      }
-    });
-    if (count > 0) avgChange /= count;
+    // TIPS利率方向
+    if (data.tips?.value != null) {
+      const tips = data.tips.value;
+      let level = tips > 2 ? 'high' : tips > 1 ? 'medium' : 'low';
+      let value = Math.min(tips * 30, 100);
+      risks.push({ label: 'TIPS利率', level, value, desc: `${tips.toFixed(2)}%，${tips > 1 ? '实际利率偏高' : '实际利率正常'}` });
+    } else {
+      risks.push({ label: 'TIPS利率', level: 'unknown', value: 0, desc: '数据暂不可用' });
+    }
 
-    // 综合市场情绪
-    let level = 'medium', value = 50;
-    if (avgChange > 0.5) { level = 'low'; value = 25; }
-    else if (avgChange > 0.2) { level = 'medium'; value = 45; }
-    else if (avgChange < -0.5) { level = 'high'; value = 75; }
-    else if (avgChange < -0.2) { level = 'medium'; value = 55; }
-    
-    risks.push({ label: '市场情绪', level, value, description: `综合涨跌 ${avgChange >= 0 ? '+' : ''}${avgChange.toFixed(2)}%` });
+    // 美债收益率
+    if (data.us10y?.value != null) {
+      const us10y = data.us10y.value;
+      let level = us10y > 4.5 ? 'high' : us10y > 4 ? 'medium' : 'low';
+      let value = Math.min(us10y * 15, 100);
+      risks.push({ label: '美债收益率', level, value, desc: `${us10y.toFixed(2)}%，${us10y > 4 ? '利率压力较大' : '利率正常'}` });
+    } else {
+      risks.push({ label: '美债收益率', level: 'unknown', value: 0, desc: '数据暂不可用' });
+    }
 
-    // 通胀风险（无数据）
-    risks.push({ label: '通胀风险', level: 'unknown', value: 0, description: '需参考CPI数据' });
-
-    // 利率风险（无数据）
-    risks.push({ label: '利率风险', level: 'unknown', value: 0, description: '需参考美债数据' });
+    // 美元指数
+    const dxy = data.marketIndices?.items?.find(i => i.name === '美元指数');
+    if (dxy?.price) {
+      const dxyVal = dxy.price;
+      let level = dxyVal > 105 ? 'high' : dxyVal > 100 ? 'medium' : 'low';
+      let value = Math.min(dxyVal, 100);
+      risks.push({ label: '美元指数', level, value, desc: `${dxyVal.toFixed(2)}，${dxyVal > 100 ? '美元偏强' : '美元偏弱'}` });
+    }
 
     return risks;
   }
 
   /**
    * 计算流动性风险
-   * 基于黄金和原油的成交量/价格稳定性
    */
-  function calculateLiquidityRisk(indices) {
-    const items = indices?.items || [];
+  function calculateLiquidityRisk(data) {
     const risks = [];
 
-    // 黄金流动性（基于价格变动幅度）
-    const gold = items.find(i => i.name?.includes('黄金'));
-    if (gold) {
-      const volatility = Math.abs(gold.changePct || 0);
-      // 波动大可能意味着流动性紧张
-      let level = 'low', value = volatility * 8;
-      if (volatility > 3) { level = 'high'; value = 70; }
-      else if (volatility > 1.5) { level = 'medium'; value = 40; }
-      risks.push({ label: '贵金属流动性', level, value: Math.min(value, 100), description: '正常' });
-    } else {
-      risks.push({ label: '贵金属流动性', level: 'unknown', value: 0, description: '数据待获取' });
-    }
+    // ETF持仓变化
+    risks.push({ label: 'ETF持仓', level: 'unknown', value: 0, desc: '数据暂不可用' });
 
-    // 原油流动性
-    const crude = items.find(i => i.name?.includes('原油'));
-    if (crude) {
-      const volatility = Math.abs(crude.changePct || 0);
-      let level = 'low', value = volatility * 8;
-      if (volatility > 5) { level = 'high'; value = 70; }
-      else if (volatility > 2) { level = 'medium'; value = 40; }
-      risks.push({ label: '能源流动性', level, value: Math.min(value, 100), description: '正常' });
+    // CFTC净多头极端度
+    if (data.cftc?.latest) {
+      const pct = data.cftc.extremes?.current_vs_high_pct || 0;
+      let level = pct < 10 ? 'high' : pct > 60 ? 'high' : 'low';
+      let value = pct < 10 ? 75 : pct > 60 ? 70 : 25;
+      let desc = pct < 10 ? '极低水平，反转信号' : pct > 60 ? '拥挤交易风险' : '正常水平';
+      risks.push({ label: 'CFTC净多头', level, value, desc });
     } else {
-      risks.push({ label: '能源流动性', level: 'unknown', value: 0, description: '数据待获取' });
-    }
-
-    // 股票市场流动性（基于A股变化）
-    const sh300 = items.find(i => i.name === '沪深300');
-    if (sh300) {
-      const volatility = Math.abs(sh300.changePct || 0);
-      let level = 'low', value = volatility * 10;
-      if (volatility > 3) { level = 'high'; value = 75; }
-      else if (volatility > 1.5) { level = 'medium'; value = 45; }
-      risks.push({ label: 'A股流动性', level, value: Math.min(value, 100), description: '正常' });
-    } else {
-      risks.push({ label: 'A股流动性', level: 'unknown', value: 0, description: '数据待获取' });
+      risks.push({ label: 'CFTC净多头', level: 'unknown', value: 0, desc: '数据暂不可用' });
     }
 
     return risks;
@@ -161,64 +212,69 @@ window.RadarModule = (function() {
 
   /**
    * 计算地缘风险
-   * 基于财经日历中的重大事件
    */
-  function calculateGeopoliticalRisk(calendarEvents) {
+  function calculateGeopoliticalRisk(calendarData) {
     const risks = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
-    if (!calendarEvents || calendarEvents.length === 0) {
-      risks.push({ label: '重大事件', level: 'unknown', value: 0, description: '日历数据待获取' });
-      risks.push({ label: '央行决议', level: 'unknown', value: 0, description: '数据待获取' });
-      risks.push({ label: '数据发布', level: 'unknown', value: 0, description: '数据待获取' });
-      return risks;
-    }
-
-    // 未来7天高重要性事件
     const nextWeek = new Date(today);
     nextWeek.setDate(nextWeek.getDate() + 7);
 
-    const upcomingHigh = calendarEvents.filter(e => {
-      const eventDate = new Date(e.date);
-      return e.importance === 'high' && eventDate >= today && eventDate <= nextWeek;
-    });
+    if (calendarData?.events) {
+      const upcomingHigh = calendarData.events.filter(e => {
+        const eventDate = new Date(e.date);
+        return e.importance === 'high' && eventDate >= today && eventDate <= nextWeek;
+      });
 
-    const fOMC = calendarEvents.filter(e => 
-      e.importance === 'high' && 
-      (e.event.includes('FOMC') || e.event.includes('美联储') || e.event.includes('利率决议')) &&
-      new Date(e.date) >= today
-    );
+      const middleEastEvents = calendarData.events.filter(e => 
+        (e.event.includes('中东') || e.event.includes('伊朗') || e.event.includes('以色列') || e.event.includes('沙特'))
+        && new Date(e.date) >= today
+      );
 
-    // 基于事件数量评估风险
-    let level = 'low', value = upcomingHigh.length * 15;
-    if (upcomingHigh.length >= 3) { level = 'high'; value = 75; }
-    else if (upcomingHigh.length >= 2) { level = 'medium'; value = 50; }
-    risks.push({ label: '重大事件', level, value: Math.min(value, 100), description: `未来7天${upcomingHigh.length}个高重要性事件` });
+      let level = 'low', value = upcomingHigh.length * 20;
+      if (upcomingHigh.length >= 3) { level = 'high'; value = 80; }
+      else if (upcomingHigh.length >= 2) { level = 'medium'; value = 55; }
+      risks.push({ label: '重大事件', level, value: Math.min(value, 100), desc: `未来7天${upcomingHigh.length}个高重要性事件` });
 
-    // 央行决议
-    risks.push({ label: '央行决议', level: fOMC.length > 0 ? 'high' : 'low', value: fOMC.length > 0 ? 70 : 20, description: fOMC.length > 0 ? '近期有FOMC会议' : '近期无央行会议' });
-
-    // 经济数据发布
-    const dataEvents = calendarEvents.filter(e =>
-      (e.event.includes('CPI') || e.event.includes('非农') || e.event.includes('GDP') || e.event.includes('PMI')) &&
-      new Date(e.date) >= today && new Date(e.date) <= nextWeek
-    );
-    let dataLevel = 'low', dataValue = dataEvents.length * 12;
-    if (dataEvents.length >= 3) { dataLevel = 'high'; dataValue = 70; }
-    else if (dataEvents.length >= 2) { dataLevel = 'medium'; dataValue = 45; }
-    risks.push({ label: '数据发布', level: dataLevel, value: Math.min(dataValue, 100), description: `近期${dataEvents.length}个重要数据` });
+      level = middleEastEvents.length > 0 ? 'high' : 'low';
+      value = middleEastEvents.length > 0 ? 70 : 20;
+      risks.push({ label: '中东事件', level, value, desc: middleEastEvents.length > 0 ? '有相关事件' : '暂无中东事件' });
+    } else {
+      risks.push({ label: '重大事件', level: 'unknown', value: 0, desc: '日历数据暂不可用' });
+      risks.push({ label: '中东事件', level: 'unknown', value: 0, desc: '日历数据暂不可用' });
+    }
 
     return risks;
+  }
+
+  /**
+   * 计算综合风险评分
+   */
+  function calculateOverallScore(risks) {
+    let totalWeight = 0;
+    let weightedScore = 0;
+    
+    const weights = {
+      market: 0.3,
+      macro: 0.3,
+      liquidity: 0.2,
+      geopolitical: 0.2
+    };
+
+    Object.entries(risks).forEach(([category, items]) => {
+      if (items.length === 0) return;
+      const avgValue = items.reduce((sum, r) => sum + (r.value || 0), 0) / items.length;
+      weightedScore += avgValue * (weights[category] || 0.25);
+      totalWeight += weights[category] || 0.25;
+    });
+
+    return totalWeight > 0 ? weightedScore / totalWeight * 1.2 : 50; // 调整系数使分数更分散
   }
 
   // =============================================================
   // 渲染函数
   // =============================================================
 
-  /**
-   * 渲染风险条
-   */
   function renderRiskBar(risk) {
     const levelLabels = { low: '低', medium: '中', high: '高', unknown: '待评估' };
     const pct = risk.level === 'unknown' ? 0 : (risk.value || 0);
@@ -229,20 +285,18 @@ window.RadarModule = (function() {
         <div class="risk-bar-track">
           <div class="risk-bar-fill ${risk.level}" style="width:${pct}%"></div>
         </div>
-        <span class="risk-value">${levelLabels[risk.level] || '—'}</span>
+        <span class="risk-value" style="color:var(--${risk.level === 'high' ? 'danger' : risk.level === 'medium' ? 'warn' : risk.level === 'low' ? 'ok' : 'text-2'})">${levelLabels[risk.level] || '—'}</span>
       </div>
+      <div class="risk-desc">${risk.desc}${risk.benchmark ? ` · ${risk.benchmark}` : ''}</div>
     `;
   }
 
-  /**
-   * 渲染风险卡片
-   */
   function renderRiskCard(title, risks, containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
     if (!risks || risks.length === 0) {
-      container.innerHTML = '<div class="loading">数据加载中...</div>';
+      container.innerHTML = '<div class="risk-bar"><span style="color:var(--text-3)">数据加载中...</span></div>';
       return;
     }
 
@@ -255,27 +309,71 @@ window.RadarModule = (function() {
 
   async function load() {
     try {
-      // 并行获取所有数据
-      const [indices, calendarData] = await Promise.all([
+      // 获取数据
+      const [goldUSD, crudeOil, marketIndices, calendarData] = await Promise.all([
+        window.ApiProxy.fetchGoldPriceUSD(),
+        window.ApiProxy.fetchCrudeOil(),
         window.ApiProxy.fetchMarketIndices(),
         fetch('data/calendar.json').then(r => r.json()).catch(() => null)
       ]);
 
-      // 计算各类风险
-      const marketRisks = calculateMarketRisk(indices);
-      const macroRisks = calculateMacroRisk(indices);
-      const liquidityRisks = calculateLiquidityRisk(indices);
-      const geopoliticalRisks = calculateGeopoliticalRisk(calendarData?.events);
+      // 计算技术指标
+      let indicators = null;
+      const historyData = await window.ApiProxy.fetchGoldHistory('day', 60);
+      if (historyData && historyData.length > 0) {
+        indicators = {
+          volatility: window.Indicators?.calcVolatility(historyData, 30)
+        };
+      }
 
-      cachedData = {
+      // 计算金油比
+      let goldOilRatio = null;
+      if (goldUSD?.price && crudeOil?.price) {
+        const ratio = goldUSD.price / crudeOil.price;
+        goldOilRatio = {
+          value: ratio,
+          comment: ratio > 30 ? '危机模式' : ratio < 15 ? '经济过热' : '正常区间'
+        };
+      }
+
+      // 组装数据
+      const data = {
+        goldUSD,
+        crudeOil,
+        marketIndices,
+        indicators,
+        goldOilRatio,
+        tips: null,
+        us10y: null,
+        cftc: null
+      };
+
+      // 计算各类风险
+      const marketRisks = calculateMarketRisk(data);
+      const macroRisks = calculateMacroRisk(data);
+      const liquidityRisks = calculateLiquidityRisk(data);
+      const geopoliticalRisks = calculateGeopoliticalRisk(calendarData);
+
+      // 综合评分
+      const risks = {
         market: marketRisks,
         macro: macroRisks,
         liquidity: liquidityRisks,
-        geopolitical: geopoliticalRisks,
-        updated_at: new Date().toISOString()
+        geopolitical: geopoliticalRisks
+      };
+      const overallScore = calculateOverallScore(risks);
+
+      cachedData = {
+        ...data,
+        risks,
+        overallScore,
+        calendarData
       };
 
-      // 渲染
+      // 渲染仪表盘
+      drawGauge('riskGauge', overallScore);
+
+      // 渲染风险条
       renderRiskCard('市场风险', marketRisks, 'marketRiskBars');
       renderRiskCard('宏观风险', macroRisks, 'macroRiskBars');
       renderRiskCard('流动性风险', liquidityRisks, 'liquidityRiskBars');
@@ -284,20 +382,14 @@ window.RadarModule = (function() {
       return cachedData;
     } catch (e) {
       console.error('风险雷达加载失败:', e);
-      
-      // 显示空状态
-      const emptyState = '<div class="risk-bar"><span class="risk-label">—</span><div class="risk-bar-track"><div class="risk-bar-fill unknown" style="width:0%"></div></div><span class="risk-value">待评估</span></div>';
-      ['marketRiskBars', 'macroRiskBars', 'liquidityRiskBars', 'geopoliticalRiskBars'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.innerHTML = emptyState;
-      });
-      
+      drawGauge('riskGauge', 50); // 默认中间值
       return null;
     }
   }
 
   return {
     load,
-    getCachedData: () => cachedData
+    getCachedData: () => cachedData,
+    drawGauge
   };
 })();

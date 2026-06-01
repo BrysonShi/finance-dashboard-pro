@@ -1,907 +1,768 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>资产配置看板 · V2.1</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
-<style>
-  :root{
-    /* 调色板：抹掉过饱和的强调色，用近 Linear/Vercel 的克制灰调 */
-    --bg-0:#0a0c10;
-    --bg-1:#0e1116;
-    --bg-2:#13171f;
-    --bg-3:#1a1f2a;
-    --line:#1f2533;
-    --line-2:#2a3243;
-    --text-0:#e8ecf3;
-    --text-1:#9ba4b6;
-    --text-2:#5e677a;
-    --text-3:#3e4658;
-    --accent:#7aa2ff;
-    --accent-2:#a5beff;
-    --ok:#3ddc97;
-    --warn:#ffb454;
-    --danger:#ff5c7a;
-    --gold:#d4a64a;
-    --rmb:#5b8bff;
-    --usd:#3ddc97;
-    --hkd:#c084fc;
-    /* 排版尺寸 */
-    --fs-h1: 18px;
-    --fs-h2: 13px;
-    --fs-body: 13px;
-    --fs-sm: 12px;
-    --fs-xs: 11px;
-    --fs-num-lg: 22px;
-    --fs-num-xl: 26px;
-    --pad-card: 14px 16px;
-    --gap: 10px;
-    --gap-sm: 6px;
-    --radius: 8px;
-    --radius-sm: 6px;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:var(--bg-0);color:var(--text-0);font-family:Inter,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5}
-  .num{font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
-  .serif{font-family:"Noto Serif SC",serif}
-  ::selection{background:rgba(122,162,255,.3);color:#fff}
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>黄金决策看板</title>
+  <meta name="description" content="黄金技术面分析 · 宏观驱动 · 财经日历 · 风险雷达 - 专业金融数据看板" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-0: #0a0c10; --bg-1: #0e1116; --bg-2: #13171f; --bg-3: #1a1f2a;
+      --line: #1f2533; --line-2: #2a3243;
+      --text-0: #e8ecf3; --text-1: #9ba4b6; --text-2: #5e677a; --text-3: #3e4658;
+      --accent: #7aa2ff; --accent-2: #a5beff;
+      --ok: #3ddc97; --warn: #ffb454; --danger: #ff5c7a; --gold: #d4a64a;
+      --fs-h1: 15px; --fs-h2: 11px; --fs-body: 13px; --fs-sm: 12px; --fs-xs: 11px;
+      --fs-num-lg: 20px; --fs-num-xl: 24px;
+      --pad-card: 12px 14px; --gap: 10px; --gap-sm: 6px;
+      --radius: 8px; --radius-sm: 6px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg-0); color: var(--text-0); font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; -webkit-font-smoothing: antialiased; font-size: 14px; line-height: 1.5; }
+    .num { font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
+    ::selection { background: rgba(122,162,255,.3); color: #fff; }
 
-  /* ============= LAYOUT ============= */
-  .wrap{max-width:1400px;margin:0 auto;padding:18px 22px 60px}
+    /* 市场脉搏条 */
+    .pulse-bar { position: fixed; top: 0; left: 0; right: 0; height: 36px; background: linear-gradient(180deg, #0d1015 0%, #0a0c10 100%); border-bottom: 1px solid var(--line); display: flex; align-items: center; padding: 0 12px; z-index: 1000; overflow-x: auto; scrollbar-width: none; gap: 0; }
+    .pulse-bar::-webkit-scrollbar { display: none; }
+    .pulse-item { display: flex; align-items: center; gap: 5px; padding: 0 10px; border-right: 1px solid var(--line); white-space: nowrap; flex-shrink: 0; }
+    .pulse-item:last-of-type { border-right: none; }
+    .pulse-name { font-size: 9px; color: var(--text-2); font-weight: 500; }
+    .pulse-price { font-family: "JetBrains Mono", monospace; font-size: 11px; font-weight: 600; color: var(--text-0); }
+    .pulse-change { font-family: "JetBrains Mono", monospace; font-size: 9px; font-weight: 500; padding: 1px 4px; border-radius: 3px; }
+    .pulse-change.up { background: rgba(255,92,122,.15); color: var(--danger); }
+    .pulse-change.down { background: rgba(61,220,151,.12); color: var(--ok); }
+    .pulse-change.flat { background: var(--bg-2); color: var(--text-2); }
+    .pulse-time { font-size: 9px; color: var(--text-3); margin-left: auto; padding-left: 10px; flex-shrink: 0; }
+    .pulse-loading { font-size: 10px; color: var(--text-3); padding: 0 10px; white-space: nowrap; }
+    .pulse-refresh { background: transparent; border: 1px solid var(--line); color: var(--text-2); font-size: 10px; padding: 2px 8px; border-radius: 4px; cursor: pointer; margin-left: 8px; flex-shrink: 0; }
+    .pulse-refresh:hover { border-color: var(--accent); color: var(--accent); }
 
-  /* ============= TOP BAR ============= */
-  header.top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:14px;border-bottom:1px solid var(--line);padding-bottom:12px;flex-wrap:wrap}
-  .title{display:flex;align-items:baseline;gap:10px}
-  .title h1{margin:0;font-size:var(--fs-h1);letter-spacing:.2px;font-weight:600}
-  .title .v{color:var(--text-2);font-size:11px;font-family:"JetBrains Mono",monospace;border:1px solid var(--line-2);padding:1px 6px;border-radius:4px}
-  .title p{margin:0;color:var(--text-2);font-size:var(--fs-xs)}
-  .meta{display:flex;align-items:center;gap:14px;color:var(--text-2);font-size:var(--fs-xs);font-family:"JetBrains Mono",monospace}
-  .meta .sep{width:1px;height:14px;background:var(--line-2)}
-  .meta b{color:var(--text-0);font-weight:500}
-  .meta-comment{color:var(--text-2);font-size:var(--fs-xs);font-style:italic;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .main-content { padding-top: 46px; }
+    .wrap { max-width: 1400px; margin: 0 auto; padding: 12px 16px 60px; }
 
-  /* date picker */
-  .date-picker{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:4px 8px;color:var(--text-0);font:inherit;font-size:var(--fs-xs);cursor:pointer;font-family:"JetBrains Mono",monospace;line-height:1.2}
-  .date-picker:focus{outline:none;border-color:var(--accent)}
-  .date-picker:hover{border-color:var(--line-2)}
+    /* 标题 */
+    header.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+    .title { display: flex; align-items: baseline; gap: 8px; }
+    .title h1 { margin: 0; font-size: var(--fs-h1); font-weight: 600; }
+    .title p { margin: 0; color: var(--text-2); font-size: var(--fs-xs); }
+    .meta { display: flex; align-items: center; gap: 8px; color: var(--text-2); font-size: var(--fs-xs); font-family: "JetBrains Mono", monospace; }
+    .meta .sep { width: 1px; height: 10px; background: var(--line-2); }
 
-  /* ============= TABS ============= */
-  .tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:14px;overflow-x:auto}
-  .tab-btn{background:transparent;border:none;color:var(--text-2);font:inherit;font-size:var(--fs-body);padding:8px 14px;cursor:pointer;border-bottom:2px solid transparent;transition:color .12s, border-color .12s;white-space:nowrap;font-weight:500}
-  .tab-btn:hover{color:var(--text-0)}
-  .tab-btn.active{color:var(--text-0);border-bottom-color:var(--accent)}
-  .tab-pane{display:none}
-  .tab-pane.active{display:block}
+    /* Tabs */
+    .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--line); margin-bottom: 12px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab-btn { background: transparent; border: none; color: var(--text-2); font: inherit; font-size: var(--fs-body); padding: 8px 14px; cursor: pointer; border-bottom: 2px solid transparent; transition: color .12s, border-color .12s; white-space: nowrap; font-weight: 500; flex-shrink: 0; }
+    .tab-btn:hover { color: var(--text-0); }
+    .tab-btn.active { color: var(--text-0); border-bottom-color: var(--gold); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
 
-  /* ============= SECTION HEADERS ============= */
-  section{margin-top:18px}
-  h2{font-size:var(--fs-h2);letter-spacing:.3px;margin:0 0 8px;color:var(--text-1);font-weight:500;text-transform:uppercase;display:flex;align-items:center;gap:8px}
-  h2 .hint{margin-left:auto;font-size:var(--fs-xs);color:var(--text-3);font-weight:400;letter-spacing:0;text-transform:none}
-  h2 code{background:var(--bg-2);padding:1px 5px;border-radius:3px;color:var(--text-2);font-size:10px}
+    section { margin-top: 12px; }
+    h2 { font-size: var(--fs-h2); letter-spacing: .3px; margin: 0 0 8px; color: var(--text-1); font-weight: 500; text-transform: uppercase; }
 
-  /* ============= HEALTH CHECK STRIP ============= */
-  .hc-strip{display:flex;flex-direction:column;gap:1px;background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:10px}
-  .hc-strip:empty{display:none}
-  .hc-row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;padding:7px 12px;background:var(--bg-1);align-items:center;font-size:var(--fs-sm);transition:background .12s}
-  .hc-row:hover{background:var(--bg-2)}
-  .hc-row + .hc-row{border-top:1px solid var(--line)}
-  .hc-row .lvl{font-size:10px;font-weight:600;padding:2px 7px;border-radius:3px;letter-spacing:.5px;text-transform:uppercase;font-family:"JetBrains Mono",monospace;flex-shrink:0;min-width:46px;text-align:center}
-  .hc-row.danger .lvl{background:rgba(255,92,122,.16);color:var(--danger)}
-  .hc-row.warn   .lvl{background:rgba(255,180,84,.16);color:var(--warn)}
-  .hc-row.info   .lvl{background:rgba(122,162,255,.14);color:var(--accent)}
-  .hc-row.ok     .lvl{background:rgba(61,220,151,.14);color:var(--ok)}
-  .hc-row .body{color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .hc-row .body b{color:var(--text-0);font-weight:500;margin-right:6px}
-  .hc-row .action{color:var(--text-3);font-size:var(--fs-xs);text-align:right;flex-shrink:0;font-style:italic}
-  @media (max-width: 720px){
-    .hc-row{grid-template-columns:auto 1fr;}
-    .hc-row .action{grid-column:1 / -1;text-align:left;padding-left:54px;margin-top:-2px}
-  }
+    /* KPI */
+    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gap); margin-bottom: var(--gap); }
+    @media (max-width: 900px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 500px) { .kpis { grid-template-columns: repeat(2, 1fr); gap: 8px; } }
 
-  /* ============= RECONCILE BAR ============= */
-  .recon{display:flex;flex-wrap:wrap;gap:0;align-items:center;background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius);padding:8px 14px;font-size:var(--fs-sm);color:var(--text-1);margin-bottom:10px}
-  .recon span{display:inline-flex;align-items:center;gap:6px;padding:0 12px;border-right:1px solid var(--line)}
-  .recon span:last-child{border-right:none}
-  .recon span:first-child{padding-left:0}
-  .recon b{color:var(--text-0);font-family:"JetBrains Mono",monospace}
-  .recon .ret-pos{color:var(--ok);font-family:"JetBrains Mono",monospace}
-  .recon .ret-neg{color:var(--danger);font-family:"JetBrains Mono",monospace}
+    .kpi { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--pad-card); display: flex; flex-direction: column; gap: 2px; transition: border-color .12s; }
+    .kpi:hover { border-color: var(--line-2); }
+    .kpi .label { font-size: 10px; color: var(--text-2); letter-spacing: .3px; text-transform: uppercase; font-weight: 500; margin-bottom: 2px; }
+    .kpi .value { font-size: var(--fs-num-lg); font-weight: 600; letter-spacing: -.3px; line-height: 1.15; color: var(--text-0); }
+    .kpi .sub { font-size: var(--fs-xs); color: var(--text-2); line-height: 1.4; margin-top: 1px; }
+    .kpi .delta { font-size: var(--fs-xs); font-family: "JetBrains Mono", monospace; margin-top: 2px; }
+    .kpi .delta.up { color: var(--danger); }
+    .kpi .delta.down { color: var(--ok); }
+    .kpi .delta.flat { color: var(--text-2); }
+    .kpi.gold { border-left: 3px solid var(--gold); }
+    .kpi .source { font-size: 9px; color: var(--text-3); margin-top: 4px; }
 
-  /* ============= KPI GRID ============= */
-  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap);margin-bottom:var(--gap)}
-  .kpis-secondary{grid-template-columns:repeat(4,1fr)}
-  @media (max-width: 1080px){ .kpis,.kpis-secondary{grid-template-columns:repeat(2,1fr)} }
-  @media (max-width: 600px){ .kpis,.kpis-secondary{grid-template-columns:1fr} }
+    /* 信号网格 */
+    .signal-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--gap-sm); }
+    @media (max-width: 600px) { .signal-grid { grid-template-columns: 1fr; } }
+    
+    .signal-item { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 8px 10px; display: flex; align-items: center; gap: 8px; transition: border-color .12s; cursor: help; }
+    .signal-item:hover { border-color: var(--line-2); }
+    .signal-light { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .signal-light.green { background: var(--ok); box-shadow: 0 0 6px rgba(61,220,151,.4); }
+    .signal-light.yellow { background: var(--warn); box-shadow: 0 0 6px rgba(255,180,84,.4); }
+    .signal-light.red { background: var(--danger); box-shadow: 0 0 6px rgba(255,92,122,.4); }
+    .signal-light.gray { background: var(--text-3); }
+    .signal-name { flex: 1; font-size: var(--fs-xs); color: var(--text-1); }
+    .signal-status { font-size: 9px; font-family: "JetBrains Mono", monospace; padding: 1px 5px; border-radius: 3px; }
+    .signal-status.green { background: rgba(61,220,151,.12); color: var(--ok); }
+    .signal-status.yellow { background: rgba(255,180,84,.12); color: var(--warn); }
+    .signal-status.red { background: rgba(255,92,122,.14); color: var(--danger); }
+    .signal-status.gray { background: var(--bg-2); color: var(--text-3); }
 
-  .kpi{background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius);padding:var(--pad-card);position:relative;overflow:hidden;display:flex;flex-direction:column;gap:2px;transition:border-color .12s}
-  .kpi:hover{border-color:var(--line-2)}
-  .kpi .label{font-size:var(--fs-xs);color:var(--text-2);letter-spacing:.3px;text-transform:uppercase;font-weight:500;margin-bottom:2px;display:flex;align-items:center;gap:6px}
-  .kpi .value{font-size:var(--fs-num-lg);font-weight:600;letter-spacing:-.3px;line-height:1.15;color:var(--text-0)}
-  .kpi .sub{font-size:var(--fs-xs);color:var(--text-2);line-height:1.4;margin-top:1px}
-  .kpi .delta{font-size:var(--fs-xs);font-family:"JetBrains Mono",monospace;margin-top:3px}
-  .kpi .delta.up  {color:var(--ok)}
-  .kpi .delta.down{color:var(--danger)}
-  .kpi .delta.flat{color:var(--text-2)}
-  .kpi.ok    .label::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--ok)}
-  .kpi.warn  .label::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--warn)}
-  .kpi.danger.label::before,.kpi.danger .label::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--danger)}
-  .kpi.gold  .label::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--gold)}
-  /* danger 卡数值高亮 */
-  .kpi.danger .value{color:var(--danger)}
-  .kpi.warn   .value{color:var(--warn)}
+    .signal-summary { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 8px; text-align: center; }
+    .signal-summary .summary-text { font-size: 14px; font-weight: 500; color: var(--gold); }
 
-  /* ============= MODULES ============= */
-  .mods{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--gap)}
-  .mod{background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius);padding:var(--pad-card);position:relative}
-  .mod-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px}
-  .mod-name{font-weight:600;font-size:var(--fs-body);display:flex;align-items:center;gap:6px}
-  .mod-name .roman{color:var(--text-3);font-family:"Noto Serif SC",serif;font-weight:700}
-  .mod-meta{text-align:right;font-size:var(--fs-xs);color:var(--text-2);line-height:1.3}
-  .mod-meta .pct{font-size:18px;font-weight:600;color:var(--text-0);font-family:"JetBrains Mono",monospace;letter-spacing:-.3px}
-  .mod-meta .pct.over{color:var(--danger)}.mod-meta .pct.under{color:var(--warn)}
-  .mod-meta .target{color:var(--text-3);font-size:10px;margin-top:1px}
-  .mod-sub-head{display:flex;align-items:center;gap:8px;color:var(--text-2);font-size:var(--fs-xs);margin-bottom:6px}
+    .disclaimer { background: rgba(255,180,84,.08); border: 1px solid rgba(255,180,84,.2); border-radius: var(--radius); padding: 8px 12px; margin-top: 12px; font-size: 11px; color: var(--warn); }
 
-  .bar{position:relative;height:5px;border-radius:3px;background:var(--bg-3);overflow:visible;margin:4px 0 10px}
-  .bar .fill{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--accent);transition:width .4s ease}
-  .bar .fill.over {background:var(--danger)}
-  .bar .fill.under{background:var(--warn)}
-  .bar .target-mark{position:absolute;top:-2px;bottom:-2px;width:1.5px;background:rgba(255,255,255,.7);border-radius:1px}
-  .bar .band{position:absolute;top:0;bottom:0;background:rgba(255,255,255,.04)}
+    /* 图表 */
+    .chart-container { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--pad-card); margin-bottom: var(--gap); }
+    .chart-title { font-size: var(--fs-sm); color: var(--text-1); margin-bottom: 8px; }
+    .chart-canvas { width: 100%; height: 180px; display: block; }
+    .chart-legend { display: flex; gap: 12px; font-size: var(--fs-xs); color: var(--text-2); margin-top: 6px; flex-wrap: wrap; }
+    .chart-legend-item { display: flex; align-items: center; gap: 4px; }
+    .chart-legend-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .chart-legend-line { width: 14px; height: 2px; }
 
-  .subs{margin-top:4px;border-top:1px solid var(--line);padding-top:6px;display:flex;flex-direction:column}
-  .sub-row{display:grid;grid-template-columns:1fr auto 110px 64px;gap:10px;align-items:center;font-size:var(--fs-sm);padding:4px 0;border-bottom:1px dashed var(--line)}
-  .sub-row:last-child{border-bottom:none}
-  .sub-name{color:var(--text-0);display:flex;align-items:center;gap:6px;min-width:0}
-  .sub-name .ccy{font-size:9px;font-weight:600;padding:1px 5px;border-radius:3px;letter-spacing:.5px;flex-shrink:0;font-family:"JetBrains Mono",monospace}
-  .ccy.RMB{background:rgba(91,139,255,.12);color:var(--rmb)}
-  .ccy.USD{background:rgba(61,220,151,.12);color:var(--usd)}
-  .ccy.HKD{background:rgba(192,132,252,.12);color:var(--hkd)}
-  .sub-name .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .sub-raw{color:var(--text-3);font-size:var(--fs-xs);text-align:right;font-family:"JetBrains Mono",monospace}
-  .sub-rmb{color:var(--text-0);font-weight:500;text-align:right;font-family:"JetBrains Mono",monospace}
-  .sub-rmb .pl{font-size:10px;font-weight:400;margin-top:1px}
-  .sub-state{font-size:var(--fs-xs);text-align:right;font-family:"JetBrains Mono",monospace}
-  .sub-state.over{color:var(--danger)}
-  .sub-state.under{color:var(--warn)}
-  .sub-state.ok{color:var(--text-3)}
+    /* 关键价位 */
+    .levels-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap-sm); }
+    .level-item { background: var(--bg-2); border-radius: var(--radius-sm); padding: 6px 8px; text-align: center; }
+    .level-item.support { border-left: 2px solid var(--ok); }
+    .level-item.resistance { border-left: 2px solid var(--danger); }
+    .level-label { font-size: 9px; color: var(--text-3); text-transform: uppercase; }
+    .level-value { font-family: "JetBrains Mono", monospace; font-size: 13px; font-weight: 600; color: var(--text-0); margin-top: 2px; }
 
-  /* ============= CHIPS ============= */
-  .chip{display:inline-flex;align-items:center;gap:5px;font-size:10px;padding:1px 7px;border-radius:3px;font-weight:500;letter-spacing:.3px;font-family:"JetBrains Mono",monospace}
-  .chip.ok    {background:rgba(61,220,151,.12);color:var(--ok)}
-  .chip.warn  {background:rgba(255,180,84,.12);color:var(--warn)}
-  .chip.danger{background:rgba(255,92,122,.14);color:var(--danger)}
-  .chip.info  {background:rgba(122,162,255,.12);color:var(--accent)}
-  .chip .dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+    /* 金油比 */
+    .ratio-card { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--pad-card); }
+    .ratio-card .ratio-value { font-family: "JetBrains Mono", monospace; font-size: 28px; font-weight: 700; color: var(--gold); }
+    .ratio-card .ratio-info { font-size: 11px; color: var(--text-2); margin-top: 4px; }
 
-  /* ============= ALERTS TABLE ============= */
-  .alerts{background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
-  table.al{width:100%;border-collapse:collapse;font-size:var(--fs-sm)}
-  table.al th,table.al td{padding:6px 12px;text-align:left}
-  table.al th{font-weight:500;color:var(--text-3);font-size:10px;letter-spacing:.4px;text-transform:uppercase;border-bottom:1px solid var(--line);background:var(--bg-2)}
-  table.al tr td{border-bottom:1px solid var(--line)}
-  table.al tr:last-child td{border-bottom:none}
-  table.al td.r{text-align:right;font-family:"JetBrains Mono",monospace}
-  table.al td .delta.over{color:var(--danger)}
-  table.al td .delta.under{color:var(--warn)}
-  table.al tr.al-mod-row td{padding-top:8px;padding-bottom:8px;border-bottom:1px solid var(--line-2);background:var(--bg-2)}
-  table.al tr.al-sub-row td{font-size:var(--fs-xs);padding-top:5px;padding-bottom:5px;color:var(--text-1)}
-  table.al tr.al-sub-row:hover td{background:rgba(255,255,255,.02)}
+    /* 季节性 */
+    .seasonality-card { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--pad-card); }
+    .seasonality-card .season-month { font-size: 14px; font-weight: 600; color: var(--gold); margin-bottom: 4px; }
+    .seasonality-card .season-detail { font-size: 11px; color: var(--text-2); }
 
-  /* ============= CCY MIX ============= */
-  .mix{display:flex;background:var(--bg-3);border-radius:3px;overflow:hidden;height:6px;margin-top:6px}
-  .mix > div{height:100%}
-  .mix-legend{display:flex;gap:14px;font-size:var(--fs-xs);color:var(--text-1);margin-top:6px;flex-wrap:wrap;font-family:"JetBrains Mono",monospace}
-  .mix-legend i{display:inline-block;width:6px;height:6px;border-radius:1px;margin-right:5px;vertical-align:middle}
+    /* 风险雷达 */
+    .radar-layout { display: grid; grid-template-columns: 200px 1fr; gap: var(--gap); }
+    @media (max-width: 700px) { .radar-layout { grid-template-columns: 1fr; } }
+    .gauge-container { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--pad-card); display: flex; align-items: center; justify-content: center; }
+    .gauge-canvas { width: 180px; height: 120px; display: block; }
+    .risk-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--gap); }
+    @media (max-width: 600px) { .risk-container { grid-template-columns: 1fr; } }
 
-  /* ============= TREND CARDS ============= */
-  .trends{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap)}
-  @media (max-width: 1080px){ .trends{grid-template-columns:repeat(2,1fr)} }
-  .trend{background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius);padding:var(--pad-card)}
-  .trend-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
-  .trend-head .t-name{font-weight:500;font-size:var(--fs-xs);color:var(--text-2);text-transform:uppercase;letter-spacing:.3px}
-  .trend-head .t-val{font-family:"JetBrains Mono",monospace;font-size:16px;font-weight:600;letter-spacing:-.3px}
-  .trend svg{display:block;width:100%;height:60px}
+    .risk-card { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--pad-card); }
+    .risk-card h3 { margin: 0 0 10px; font-size: var(--fs-sm); color: var(--text-1); font-weight: 500; }
+    .risk-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .risk-bar:last-child { margin-bottom: 0; }
+    .risk-label { width: 65px; font-size: 10px; color: var(--text-2); flex-shrink: 0; }
+    .risk-bar-track { flex: 1; height: 6px; background: var(--bg-3); border-radius: 3px; overflow: hidden; }
+    .risk-bar-fill { height: 100%; border-radius: 3px; transition: width .3s; }
+    .risk-bar-fill.low { background: var(--ok); }
+    .risk-bar-fill.medium { background: var(--warn); }
+    .risk-bar-fill.high { background: var(--danger); }
+    .risk-bar-fill.unknown { background: var(--text-3); }
+    .risk-value { width: 35px; font-family: "JetBrains Mono", monospace; font-size: 10px; text-align: right; flex-shrink: 0; }
+    .risk-desc { font-size: 9px; color: var(--text-3); margin-left: 73px; margin-top: -4px; margin-bottom: 6px; }
 
-  /* ============= TIMELINE ============= */
-  .timeline{display:flex;flex-direction:column;gap:0}
-  .tl-row{display:grid;grid-template-columns:90px 1fr 110px 70px;gap:12px;font-size:var(--fs-sm);align-items:center;padding:5px 12px;cursor:pointer;transition:background .12s;border-bottom:1px solid var(--line)}
-  .tl-row:last-child{border-bottom:none}
-  .tl-row:hover{background:var(--bg-2)}
-  .tl-row.active{background:var(--bg-3);border-left:2px solid var(--accent);padding-left:10px}
-  .tl-row .d{color:var(--text-1);font-family:"JetBrains Mono",monospace;font-size:var(--fs-xs)}
-  .tl-row .c{color:var(--text-2);font-size:var(--fs-xs);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .tl-row .v{text-align:right;font-family:"JetBrains Mono",monospace;color:var(--text-0)}
-  .tl-row .chg{text-align:right;font-family:"JetBrains Mono",monospace;font-size:var(--fs-xs)}
-  .tl-row .chg.up{color:var(--ok)}.tl-row .chg.down{color:var(--danger)}.tl-row .chg.flat{color:var(--text-2)}
+    /* 指标卡片 */
+    .indicator-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: var(--gap); }
+    .indicator-card { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--pad-card); position: relative; }
+    .indicator-card.alert { border-color: rgba(255,180,84,.4); }
+    .indicator-card .name { font-size: 10px; color: var(--text-2); text-transform: uppercase; letter-spacing: .3px; }
+    .indicator-card .value { font-family: "JetBrains Mono", monospace; font-size: var(--fs-num-lg); font-weight: 600; color: var(--text-0); margin-top: 3px; }
+    .indicator-card .value .unit { font-size: var(--fs-sm); color: var(--text-2); font-weight: 400; margin-left: 2px; }
+    .indicator-card .change { font-size: var(--fs-xs); font-family: "JetBrains Mono", monospace; margin-top: 2px; }
+    .indicator-card .change.up { color: var(--danger); }
+    .indicator-card .change.down { color: var(--ok); }
+    .indicator-card .period { font-size: 9px; color: var(--text-3); margin-top: 4px; }
+    .indicator-card .alert-badge { position: absolute; top: 8px; right: 8px; font-size: 9px; padding: 1px 4px; border-radius: 3px; background: rgba(255,180,84,.15); color: var(--warn); }
+    .indicator-card .note { font-size: 9px; color: var(--text-3); margin-top: 4px; }
 
-  /* ============= TARGET OVERVIEW ============= */
-  .target-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap);margin-bottom:var(--gap)}
-  .target-meta .card{background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius);padding:var(--pad-card)}
-  .target-meta .card h3{margin:0 0 8px;font-size:var(--fs-xs);color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;font-weight:500}
-  .target-meta .card ul{margin:0;padding-left:14px;color:var(--text-1);font-size:var(--fs-sm);line-height:1.6}
-  .target-meta .card .kv{display:flex;justify-content:space-between;font-size:var(--fs-sm);padding:3px 0;border-bottom:1px dashed var(--line);gap:10px}
-  .target-meta .card .kv:last-child{border-bottom:none}
-  .target-meta .card .kv > span:first-child{color:var(--text-2);flex-shrink:0}
-  .target-meta .card .kv b{color:var(--text-0);font-family:"JetBrains Mono",monospace;font-weight:500;text-align:right}
+    /* 央行购金 */
+    .cb-card { background: var(--bg-2); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 10px; }
+    .cb-header { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-2); }
+    .cb-value { font-family: "JetBrains Mono", monospace; font-weight: 600; color: var(--gold); }
+    .cb-note { font-size: 10px; color: var(--text-3); margin-top: 4px; }
+    .cb-list { display: flex; flex-direction: column; gap: 6px; }
+    .cb-item { display: flex; align-items: center; gap: 8px; font-size: 11px; padding: 6px 8px; background: var(--bg-1); border-radius: 4px; }
+    .cb-country { width: 40px; font-weight: 500; color: var(--text-0); }
+    .cb-data { flex: 1; color: var(--text-2); }
+    .cb-tonnes { font-family: "JetBrains Mono", monospace; margin-left: 4px; }
+    .cb-impact { font-size: 10px; }
 
-  .target-mod{background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius);padding:var(--pad-card);margin-bottom:var(--gap)}
-  .target-mod-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:6px}
-  .target-mod-head .nm{font-weight:600;font-size:var(--fs-body)}
-  .target-mod-head .roman{color:var(--text-3);margin-right:6px;font-family:"Noto Serif SC",serif;font-weight:700}
-  .target-mod-head .pct{font-family:"JetBrains Mono",monospace;font-size:16px;font-weight:600;color:var(--accent)}
-  .target-mod-head .pct small{font-size:10px;color:var(--text-3);font-weight:400;margin-left:4px}
-  .target-mod .purpose{color:var(--text-1);font-size:var(--fs-sm);margin:4px 0 4px}
-  .target-mod .rationale{color:var(--text-2);font-size:var(--fs-xs);line-height:1.6;margin-bottom:8px;padding:8px 10px;background:var(--bg-2);border-left:2px solid var(--accent);border-radius:0 4px 4px 0}
-  .target-mod .rationale b{color:var(--text-1);font-weight:500}
-  .target-mod table{width:100%;border-collapse:collapse;font-size:var(--fs-sm);margin-top:6px}
-  .target-mod th,.target-mod td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--line)}
-  .target-mod th{font-weight:500;color:var(--text-3);font-size:10px;letter-spacing:.4px;text-transform:uppercase;background:var(--bg-2)}
-  .target-mod tr:last-child td{border-bottom:none}
-  .target-mod td.r{text-align:right;font-family:"JetBrains Mono",monospace}
-  .target-mod td .note{color:var(--text-3);font-size:var(--fs-xs)}
+    /* CFTC */
+    .cftc-card { background: var(--bg-2); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .cftc-value { font-family: "JetBrains Mono", monospace; font-size: 20px; font-weight: 700; color: var(--gold); }
+    .cftc-label { font-size: 9px; color: var(--text-3); }
+    .cftc-change { font-family: "JetBrains Mono", monospace; font-size: 12px; padding: 4px 8px; border-radius: 4px; }
+    .cftc-change.up { background: rgba(61,220,151,.12); color: var(--ok); }
+    .cftc-change.down { background: rgba(255,92,122,.12); color: var(--danger); }
+    .cftc-meta { font-size: 11px; color: var(--text-2); margin-bottom: 6px; }
+    .cftc-meta span { margin-right: 12px; }
+    .cftc-note { font-size: 10px; color: var(--text-3); }
 
-  .changelog{background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius);padding:var(--pad-card);margin-top:var(--gap)}
-  .changelog h3{margin:0 0 8px;font-size:var(--fs-xs);color:var(--text-2);font-weight:500;letter-spacing:.3px;text-transform:uppercase}
-  .changelog .entry{padding:6px 0;border-bottom:1px dashed var(--line)}
-  .changelog .entry:last-child{border-bottom:none}
-  .changelog .entry .head{display:flex;gap:12px;align-items:baseline;margin-bottom:3px}
-  .changelog .entry .ver{font-weight:600;color:var(--accent);font-family:"JetBrains Mono",monospace;font-size:var(--fs-xs)}
-  .changelog .entry .d{color:var(--text-3);font-family:"JetBrains Mono",monospace;font-size:10px}
-  .changelog .entry ul{margin:2px 0 0;padding-left:14px;color:var(--text-1);font-size:var(--fs-sm);line-height:1.55}
+    /* 技术面表格 */
+    .tech-table { width: 100%; border-collapse: collapse; background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    .tech-table th { background: var(--bg-2); padding: 8px 12px; text-align: left; font-size: 10px; color: var(--text-2); text-transform: uppercase; font-weight: 500; }
+    .tech-table td { padding: 8px 12px; font-size: 12px; border-top: 1px solid var(--line); }
+    .tech-table tr:hover td { background: var(--bg-2); }
+    .tech-table .num { font-family: "JetBrains Mono", monospace; }
+    .tech-table .up { color: var(--ok); }
+    .tech-table .down { color: var(--danger); }
+    .tech-table .neutral { color: var(--text-2); }
 
-  /* ============= SWR 反推卡（FIRE 总盘目标）============= */
-  .swr-card{background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px;overflow:hidden}
-  .swr-card:empty{display:none}
-  .swr-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 14px 8px;border-bottom:1px solid var(--line);flex-wrap:wrap}
-  .swr-head .title{font-size:var(--fs-sm);color:var(--text-0);font-weight:500;letter-spacing:.2px}
-  .swr-head .title .icon{margin-right:6px}
-  .swr-head .now{font-size:var(--fs-xs);color:var(--text-2);font-family:"JetBrains Mono",monospace}
-  .swr-head .now b{color:var(--text-0);font-weight:600;margin:0 2px}
-  .swr-rows{display:flex;flex-direction:column}
-  .swr-row{display:grid;grid-template-columns:90px 1fr 100px 90px;gap:14px;padding:8px 14px;align-items:center;font-size:var(--fs-sm);border-bottom:1px solid var(--line)}
-  .swr-row:last-child{border-bottom:none}
-  .swr-row .tag{font-weight:600;font-family:"JetBrains Mono",monospace;font-size:var(--fs-sm);letter-spacing:.3px}
-  .swr-row .tag .pct{color:var(--text-2);font-weight:400;margin-left:4px;font-size:var(--fs-xs)}
-  .swr-row .bar{position:relative;height:6px;background:var(--bg-3);border-radius:3px;overflow:hidden}
-  .swr-row .bar .fill{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--accent);transition:width .25s}
-  .swr-row .bar .fill.done{background:var(--ok)}
-  .swr-row .target{text-align:right;font-family:"JetBrains Mono",monospace;color:var(--text-1);font-size:var(--fs-sm)}
-  .swr-row .progress{text-align:right;font-family:"JetBrains Mono",monospace;font-size:var(--fs-sm);color:var(--text-0);font-weight:500}
-  .swr-row .progress.done{color:var(--ok)}
-  .swr-row .progress.far{color:var(--text-2)}
-  .swr-foot{padding:7px 14px 9px;font-size:var(--fs-xs);color:var(--text-2);background:var(--bg-0);border-top:1px solid var(--line)}
-  .swr-foot code{color:var(--text-1);font-family:"JetBrains Mono",monospace}
+    .levels-table { width: 100%; border-collapse: collapse; background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; margin-top: 8px; }
+    .levels-table th { background: var(--bg-2); padding: 8px 12px; text-align: left; font-size: 10px; color: var(--text-2); text-transform: uppercase; }
+    .levels-table td { padding: 8px 12px; font-size: 12px; border-top: 1px solid var(--line); }
+    .levels-table .num { font-family: "JetBrains Mono", monospace; }
+    .levels-table .support { color: var(--ok); }
+    .levels-table .resistance { color: var(--danger); }
 
-  /* Coast FIRE 已达成态：整卡左侧绿色高亮带 */
-  .swr-card.achieved{border-color:rgba(61,220,151,.35);box-shadow:inset 3px 0 0 var(--ok)}
-  .swr-card.achieved .swr-head .title{color:var(--ok)}
+    /* 日历 */
+    .calendar-month { margin-bottom: 12px; }
+    .calendar-month-title { font-size: var(--fs-sm); color: var(--text-1); font-weight: 600; margin-bottom: 6px; padding-left: 4px; border-left: 3px solid var(--gold); display: flex; align-items: center; }
+    .calendar-list { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    .calendar-item { display: grid; grid-template-columns: 70px 45px 1fr auto; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line); align-items: center; transition: background .12s; }
+    .calendar-item:last-child { border-bottom: none; }
+    .calendar-item:hover { background: var(--bg-2); }
+    .calendar-item.past { opacity: 0.5; }
+    .calendar-item.high { border-left: 2px solid var(--danger); }
+    .calendar-item.medium { border-left: 2px solid var(--warn); }
+    .calendar-item.tomorrow-warning { background: rgba(255,180,84,.08); }
+    .calendar-date { font-family: "JetBrains Mono", monospace; font-size: var(--fs-sm); color: var(--text-1); line-height: 1.3; }
+    .calendar-country { font-size: 9px; padding: 1px 4px; border-radius: 3px; background: var(--bg-3); color: var(--text-2); text-align: center; }
+    .calendar-event { font-size: var(--fs-sm); color: var(--text-0); }
+    .calendar-countdown { font-size: 9px; font-family: "JetBrains Mono", monospace; padding: 1px 4px; border-radius: 3px; white-space: nowrap; }
+    .calendar-countdown.soon { background: rgba(255,92,122,.15); color: var(--danger); }
+    .calendar-countdown.upcoming { background: rgba(255,180,84,.12); color: var(--warn); }
+    .calendar-countdown.normal { background: var(--bg-3); color: var(--text-2); }
+    .calendar-importance { font-size: 9px; font-family: "JetBrains Mono", monospace; padding: 1px 4px; border-radius: 3px; text-transform: uppercase; white-space: nowrap; }
+    .calendar-importance.high { background: rgba(255,92,122,.15); color: var(--danger); }
+    .calendar-importance.medium { background: rgba(255,180,84,.12); color: var(--warn); }
+    .calendar-importance.low { background: var(--bg-3); color: var(--text-3); }
+    .calendar-filter { display: flex; align-items: center; gap: 8px; }
+    .calendar-filter select { background: var(--bg-2); color: var(--text-0); border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; font-size: 12px; }
 
-  /* Full FIRE 兜底行（Bengen 3.5%）— 单行紧凑展示 */
-  .swr-bengen{display:grid;grid-template-columns:auto 1fr auto;gap:14px;padding:7px 14px;align-items:baseline;font-size:var(--fs-xs);background:var(--bg-2);border-top:1px solid var(--line);color:var(--text-2)}
-  .swr-bengen .bengen-label{font-weight:600;color:var(--text-1);font-family:"JetBrains Mono",monospace;letter-spacing:.3px}
-  .swr-bengen .bengen-detail{color:var(--text-2)}
-  .swr-bengen .bengen-detail b{color:var(--text-0);font-family:"JetBrains Mono",monospace;font-weight:600}
-  .swr-bengen .bengen-progress{font-family:"JetBrains Mono",monospace;color:var(--text-1);font-weight:500}
-  .swr-bengen .bengen-progress.done{color:var(--ok)}
+    /* 设置页 */
+    .settings-section { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--pad-card); margin-bottom: var(--gap); }
+    .settings-section h3 { margin: 0 0 12px; font-size: var(--fs-sm); color: var(--text-1); font-weight: 500; }
+    .settings-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-label { font-size: 13px; color: var(--text-0); }
+    .settings-desc { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .settings-select { background: var(--bg-2); color: var(--text-0); border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; font-size: 12px; }
+    .about-text { font-size: 12px; color: var(--text-2); line-height: 1.6; }
 
-  /* ============= MILESTONES ============= */
-  .ms-summary{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
-  .ms-summary > div{padding:4px 10px;background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius-sm);font-size:var(--fs-xs);font-family:"JetBrains Mono",monospace;display:flex;align-items:center;gap:6px}
-  .ms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:6px}
-  .ms-card{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 12px;display:flex;gap:10px;align-items:center}
-  .ms-card .ms-check{width:14px;height:14px;border-radius:3px;border:1.5px solid var(--text-3);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;color:var(--ok);line-height:1}
-  .ms-card.done .ms-check{background:rgba(61,220,151,.14);border-color:var(--ok)}
-  .ms-card.done .ms-name{text-decoration:line-through;color:var(--text-3)}
-  .ms-card .ms-prio{font-size:9px;font-weight:600;padding:1px 5px;border-radius:3px;letter-spacing:.3px;flex-shrink:0;font-family:"JetBrains Mono",monospace}
-  .ms-card .ms-prio.P0{background:rgba(255,92,122,.14);color:var(--danger)}
-  .ms-card .ms-prio.P1{background:rgba(255,180,84,.14);color:var(--warn)}
-  .ms-card .ms-prio.P2{background:rgba(122,162,255,.14);color:var(--accent)}
-  .ms-card .ms-prio.P3{background:rgba(164,173,191,.10);color:var(--text-2)}
-  .ms-card .ms-name{font-size:var(--fs-sm);color:var(--text-0);font-weight:500;line-height:1.35}
-  .ms-card .ms-note{font-size:10px;color:var(--text-3);margin-top:1px;line-height:1.3}
+    /* 空状态 */
+    .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px 16px; color: var(--text-3); text-align: center; }
+    .empty-state .icon { font-size: 24px; margin-bottom: 8px; opacity: 0.5; }
+    .empty-state .text { font-size: var(--fs-sm); }
 
-  /* ============= INFLATION TOGGLE ============= */
-  .infl-toggle{display:inline-flex;background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden;font-size:var(--fs-xs)}
-  .infl-toggle button{background:transparent;border:none;color:var(--text-2);padding:4px 9px;cursor:pointer;font:inherit;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.2px}
-  .infl-toggle button.active{background:var(--accent);color:#fff}
-  .infl-toggle button:hover:not(.active){color:var(--text-0)}
+    /* 加载动画 */
+    .loading { display: flex; align-items: center; justify-content: center; padding: 24px; color: var(--text-3); font-size: var(--fs-sm); gap: 8px; }
+    .loading::before { content: ""; width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ============= LIA / CASHFLOW SHARED ============= */
-  .lia-card{background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius);padding:var(--pad-card);margin-bottom:var(--gap)}
-  .lia-table{width:100%;border-collapse:collapse;font-size:var(--fs-sm)}
-  .lia-table th,.lia-table td{padding:5px 10px;text-align:left;border-bottom:1px solid var(--line)}
-  .lia-table th{font-weight:500;color:var(--text-3);font-size:10px;letter-spacing:.4px;text-transform:uppercase;background:var(--bg-2)}
-  .lia-table td.r{text-align:right;font-family:"JetBrains Mono",monospace}
-  .lia-table tr:last-child td{border-bottom:none}
-  .lia-table tr.urgent td{background:rgba(255,180,84,.04)}
-  .lia-table tr.due-soon td{background:rgba(255,92,122,.05)}
-  .lia-table tr:hover td{background:rgba(255,255,255,.02)}
-  .lia-table tr.urgent:hover td{background:rgba(255,180,84,.07)}
+    .data-source { font-size: 9px; color: var(--text-3); text-align: right; margin-top: 10px; }
 
-  .countdown{font-family:"JetBrains Mono",monospace;font-size:10px;padding:1px 6px;border-radius:3px;display:inline-block}
-  .countdown.soon{background:rgba(255,92,122,.14);color:var(--danger)}
-  .countdown.warn{background:rgba(255,180,84,.14);color:var(--warn)}
-  .countdown.ok  {background:rgba(61,220,151,.10);color:var(--ok)}
-
-  /* ============= CASHFLOW CATEGORY ============= */
-  .cf-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--gap)}
-  .cat-bar{display:flex;height:8px;border-radius:3px;overflow:hidden;background:var(--bg-3);margin-top:6px}
-  .cat-bar > div{height:100%}
-  .cat-list{display:flex;flex-direction:column;gap:0;margin-top:8px}
-  .cat-row{display:grid;grid-template-columns:14px 1fr 90px 50px;gap:8px;font-size:var(--fs-sm);align-items:center;padding:3px 0;border-bottom:1px dashed var(--line)}
-  .cat-row:last-child{border-bottom:none}
-  .cat-row .swatch{width:8px;height:8px;border-radius:2px}
-  .cat-row .nm{color:var(--text-0)}
-  .cat-row .amt{text-align:right;font-family:"JetBrains Mono",monospace}
-  .cat-row .pp{text-align:right;color:var(--text-3);font-size:10px;font-family:"JetBrains Mono",monospace}
-
-  /* ============= WATERFALL ============= */
-  .waterfall{margin-top:8px}
-  .wf-row{display:grid;grid-template-columns:48px 1fr 130px 110px;gap:10px;font-size:var(--fs-xs);padding:4px 8px;border-radius:3px;align-items:flex-start;border-bottom:1px solid var(--line)}
-  .wf-row:last-child{border-bottom:none}
-  .wf-row:hover{background:var(--bg-2)}
-  .wf-row.current{background:rgba(122,162,255,.04);border-left:2px solid var(--accent);padding-left:6px}
-  .wf-row .yr{color:var(--text-1);font-family:"JetBrains Mono",monospace;padding-top:1px}
-  .wf-bar-wrap{position:relative;height:8px;background:var(--bg-3);border-radius:2px;overflow:hidden}
-  .wf-bar-fill{position:absolute;left:0;top:0;bottom:0;background:var(--danger);opacity:.7;border-radius:2px}
-  .wf-bar-fill.income{background:var(--ok);opacity:.7}
-  .wf-net{font-family:"JetBrains Mono",monospace;text-align:right;font-weight:500;padding-top:1px}
-  .wf-net.positive{color:var(--ok)}
-  .wf-net.negative{color:var(--danger)}
-  .wf-net .wf-change{font-size:9px;font-weight:400;margin-top:1px}
-  .wf-net .wf-change.positive{color:var(--ok)}
-  .wf-net .wf-change.negative{color:var(--danger)}
-  .wf-amount{font-family:"JetBrains Mono",monospace;text-align:right;color:var(--text-2);padding-top:1px;font-size:10px}
-  .wf-amount .income-line{color:var(--ok)}
-
-  /* ============= TENCENT LADDER ============= */
-  #tencent-ladder .lia-card{padding:10px 14px}
-
-  /* ============= FOOTER ============= */
-  footer{margin-top:24px;color:var(--text-3);font-size:10px;text-align:center;line-height:1.6;font-family:"JetBrains Mono",monospace}
-  footer code{background:var(--bg-2);padding:1px 4px;border-radius:3px;color:var(--text-2)}
-
-  .btn{appearance:none;border:1px solid var(--line);background:var(--bg-2);color:var(--text-1);border-radius:999px;padding:5px 10px;font-size:11px;line-height:1;cursor:pointer;font-family:"JetBrains Mono",monospace}
-  .btn:hover{border-color:var(--line-2);color:var(--text-0)}
-  .btn.primary{border-color:rgba(122,162,255,.35);color:var(--text-0)}
-  .btn.primary:hover{border-color:rgba(122,162,255,.6)}
-  .btn.ghost{background:transparent}
-
-  .tt-bubble{position:fixed;z-index:9999;max-width:380px;min-width:220px;pointer-events:none;opacity:0;transform:translateY(6px);transition:opacity .12s ease, transform .12s ease;background:rgba(19,23,31,.98);border:1px solid rgba(42,50,67,.9);border-radius:10px;box-shadow:0 18px 48px rgba(0,0,0,.45);padding:10px 12px;color:var(--text-1);font-size:12px;line-height:1.55}
-  .tt-bubble.show{opacity:1;transform:translateY(0)}
-  .tt-title{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
-  .tt-body b{color:var(--text-0);font-weight:600}
-  .tt-body code{background:var(--bg-2);padding:1px 4px;border-radius:4px;color:var(--text-1);font-family:"JetBrains Mono",monospace;font-size:11px}
-
-  .modal-mask{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);z-index:9998;display:none}
-  .modal-mask.show{display:block}
-  .modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9999;width:min(820px, calc(100vw - 28px));max-height:min(720px, calc(100vh - 28px));overflow:auto;background:var(--bg-1);border:1px solid var(--line);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.6);display:none}
-  .modal.show{display:block}
-  .modal-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line)}
-  .modal-title{font-size:13px;font-weight:600;color:var(--text-0);letter-spacing:.2px}
-  .modal-body{padding:14px 16px;color:var(--text-1);font-size:13px;line-height:1.7}
-  .modal-body h3{margin:14px 0 8px;font-size:12px;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
-  .modal-body ul{margin:0;padding-left:16px}
-  .modal-body li{margin:4px 0}
-  .modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:12px 16px;border-top:1px solid var(--line);background:var(--bg-2)}
-  .jump-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-
-  /* ============= MOBILE ============= */
-  @media (max-width: 820px){
-    .wrap{padding:14px 14px 40px}
-    .mods,.cf-grid,.target-meta{grid-template-columns:1fr}
-    header.top{flex-direction:column;align-items:flex-start;gap:8px}
-    .meta{flex-wrap:wrap;gap:8px}
-    .meta .sep{display:none}
-    .tl-row{grid-template-columns:80px 1fr 90px 60px;font-size:11px}
-    .wf-row{grid-template-columns:42px 1fr 100px 90px;font-size:10px}
-  }
-</style>
+    /* 响应式 */
+    @media (max-width: 600px) {
+      .wrap { padding: 10px 12px 80px; }
+      .title h1 { font-size: 14px; }
+      .title p { display: none; }
+      .pulse-bar { height: 32px; }
+      .pulse-name { display: none; }
+      .meta { display: none; }
+      .calendar-item { grid-template-columns: 60px 40px 1fr; gap: 6px; }
+      .calendar-countdown, .calendar-importance { display: none; }
+      .kpis { grid-template-columns: repeat(2, 1fr); }
+      .radar-layout { grid-template-columns: 1fr; }
+      .gauge-container { order: -1; }
+    }
+  </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="top">
-    <div class="title">
-      <h1 class="serif">家庭财务看板</h1>
-      <span class="v">V2.5</span>
-      <p>资产 · 负债 · 现金流</p>
-    </div>
-    <div class="meta">
-      <span title="选择历史快照；看板所有数字均基于当前选中的快照">快照</span>
-      <select id="date-picker" class="date-picker" title="选择历史快照；看板所有数字均基于当前选中的快照"></select>
-      <span class="sep"></span>
-      <span title="当前快照汇率：1 USD 折算为多少 RMB">USD <b id="rate-usd">—</b></span>
-      <span title="当前快照汇率：1 HKD 折算为多少 RMB">HKD <b id="rate-hkd">—</b></span>
-      <span class="sep"></span>
-      <span class="meta-comment" id="snapshot-comment"></span>
-      <button class="btn primary" id="help-open" type="button">新手</button>
-    </div>
-  </header>
 
-  <nav class="tabs" role="tablist">
-    <button class="tab-btn active" data-tab="assets">📊 资产配置</button>
-    <button class="tab-btn" data-tab="target">🎯 目标配置</button>
-    <button class="tab-btn" data-tab="liab">💸 负债与刚性</button>
-    <button class="tab-btn" data-tab="cash">📈 现金流追踪</button>
-    <button class="tab-btn" data-tab="tax">💰 税务计算</button>
-  </nav>
+<!-- 市场脉搏条 -->
+<div class="pulse-bar" id="pulseBar">
+  <span class="pulse-loading">加载市场数据...</span>
+  <button class="pulse-refresh" onclick="loadMarketPulse()" title="刷新数据">↻</button>
+</div>
 
-  <!-- =========== Tab 1: 资产配置 =========== -->
-  <div class="tab-pane active" id="tab-assets">
-    <div id="jump-kpis"></div>
-    <div class="lia-card" id="beginner-strip" style="display:none;margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
-        <div>
-          <div style="font-size:12px;color:var(--text-2);margin-bottom:6px">入门速览</div>
-          <div style="font-size:13px;color:var(--text-1);line-height:1.65">
-            先选 <b>快照</b> → 看 <b>模块</b> 是否超阈值 → 点开子项：右侧 <b>实际占比</b> 与 <b>Δ(pp)</b> 看“偏多/偏少”。
-            <br/>子项里：<b>市值</b> 是折RMB；<b>浮盈亏</b> 只对证券类（有成本）展示。
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button class="btn" id="beginner-off" type="button">关闭</button>
-        </div>
+<!-- 主内容 -->
+<div class="main-content">
+  <div class="wrap">
+    <header class="top">
+      <div class="title">
+        <h1>🥇 黄金决策看板</h1>
+        <p>专业黄金分析工具</p>
       </div>
-    </div>
-    <div class="lia-card" id="advanced-strip" style="display:none;margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-        <div style="color:var(--text-2);font-size:12px;line-height:1.6">
-          新手模式：已隐藏“告警表/趋势/时间线/增长预测/里程碑”等高级区块
-        </div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button class="btn" id="advanced-toggle" type="button">展开高级</button>
-        </div>
+      <div class="meta">
+        <span id="lastUpdate">—</span>
+        <span class="sep"></span>
+        <span id="currentTime">—</span>
       </div>
+    </header>
+
+    <!-- Tabs -->
+    <div class="tabs" role="tablist">
+      <button class="tab-btn active" data-tab="gold" role="tab">🥇 黄金决策</button>
+      <button class="tab-btn" data-tab="tech" role="tab">📊 技术面</button>
+      <button class="tab-btn" data-tab="macro" role="tab">🌐 宏观驱动</button>
+      <button class="tab-btn" data-tab="calendar" role="tab">📅 财经日历</button>
+      <button class="tab-btn" data-tab="radar" role="tab">🎯 风险雷达</button>
+      <button class="tab-btn" data-tab="settings" role="tab">⚙️ 设置</button>
     </div>
-    <div id="health-check"></div>
-    <div id="tencent-ladder"></div>
-    <div id="reconcile-bar"></div>
-    <div class="kpis" id="kpis"></div>
-    <div class="kpis kpis-secondary" id="kpis-secondary"></div>
-    <div id="swr-card"></div>
 
-    <section>
-      <div id="jump-mods"></div>
-      <h2>模块画像（大类配置）<span class="hint">竖白线 = 目标值；浅色带 = 阈值区间</span></h2>
-      <div class="mods" id="mods"></div>
-    </section>
-
-    <section>
-      <h2>币种分布</h2>
-      <div class="lia-card" style="grid-column:1/-1">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap">
-          <div style="flex:1;min-width:300px">
-            <div class="mix" id="ccy-mix"></div>
-            <div class="mix-legend" id="ccy-legend"></div>
-          </div>
-          <div style="text-align:right;font-size:var(--fs-xs);color:var(--text-2);min-width:200px">
-            <div>RMB 红线 ≤ <b style="color:var(--text-0);font-family:'JetBrains Mono',monospace">70%</b> · 目标 60%</div>
-            <div id="ccy-status" style="margin-top:4px"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section>
-      <div id="jump-pools"></div>
-      <h2>池分离 · RMB 池 vs 海外池<span class="hint">人民币出不去；海外子弹只能在海外腾挪</span></h2>
-      <div class="mods" id="pools"></div>
-    </section>
-
-    <div id="advanced-assets">
+    <!-- Tab 1: 黄金决策 -->
+    <div class="tab-pane active" id="tab-gold" role="tabpanel">
       <section>
-        <h2>偏离告警 · Sub 项明细</h2>
-        <div class="alerts">
-          <table class="al" id="alerts">
+        <h2>金价实时</h2>
+        <div class="kpis" id="goldPriceCards">
+          <div class="kpi gold">
+            <div class="label">现货黄金 (USD)</div>
+            <div class="value num" id="goldUsdPrice">—</div>
+            <div class="delta" id="goldUsdChange">—</div>
+            <div class="source">腾讯财经</div>
+          </div>
+          <div class="kpi gold">
+            <div class="label">AU9999 (CNY)</div>
+            <div class="value num" id="goldCnyPrice">—</div>
+            <div class="delta" id="goldCnyChange">—</div>
+            <div class="source">汇率换算</div>
+          </div>
+          <div class="kpi">
+            <div class="label">金油比</div>
+            <div class="value num" id="goldOilRatio">—</div>
+            <div class="sub" id="goldOilRatioStatus">—</div>
+          </div>
+          <div class="kpi">
+            <div class="label">季节性规律</div>
+            <div class="sub" id="seasonalityInfo">加载中...</div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>10条加仓信号</h2>
+        <div class="signal-summary">
+          <span class="summary-text" id="signalSummary">加载中...</span>
+        </div>
+        <div class="signal-grid" id="signalGrid">
+          <div class="loading">加载信号数据...</div>
+        </div>
+        <div class="disclaimer">⚠️ 信号仅供参考，不构成投资建议</div>
+      </section>
+
+      <section>
+        <h2>金价走势 (近250交易日)</h2>
+        <div class="chart-container">
+          <div class="chart-title">📈 黄金价格 vs MA200</div>
+          <canvas class="chart-canvas" id="goldChart"></canvas>
+          <div class="chart-legend">
+            <div class="chart-legend-item"><div class="chart-legend-dot" style="background:var(--gold)"></div><span>金价</span></div>
+            <div class="chart-legend-item"><div class="chart-legend-line" style="background:var(--accent)"></div><span>MA200</span></div>
+            <div class="chart-legend-item"><div class="chart-legend-line" style="background:var(--ok)"></div><span>支撑</span></div>
+            <div class="chart-legend-item"><div class="chart-legend-line" style="background:var(--danger)"></div><span>阻力</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>关键价位</h2>
+        <div style="margin-bottom:6px">
+          <span style="font-size:10px;color:var(--text-3)">支撑位</span>
+          <div class="levels-grid" id="supportLevels"></div>
+        </div>
+        <div>
+          <span style="font-size:10px;color:var(--text-3)">阻力位</span>
+          <div class="levels-grid" id="resistanceLevels"></div>
+        </div>
+      </section>
+
+      <section>
+        <h2>汇率对冲提示</h2>
+        <div class="seasonality-card" id="exchangeHedge">
+          <span style="color:var(--text-2)">加载中...</span>
+        </div>
+      </section>
+    </div>
+
+    <!-- Tab 2: 技术面 -->
+    <div class="tab-pane" id="tab-tech" role="tabpanel">
+      <section>
+        <h2>多周期技术指标</h2>
+        <div id="techIndicators">
+          <table class="tech-table">
             <thead>
               <tr>
-                <th title="模块（大类）名称">模块</th>
-                <th title="子项名称（具体账户/标的）">子项</th>
-                <th class="r" title="市值（折RMB）：原币金额/证券市值按汇率折算">市值（RMB）</th>
-                <th class="r" title="实际占比=该项市值/总盘">实际占比</th>
-                <th class="r" title="该模块目标占比（来自target.json）">大类目标</th>
-                <th class="r" title="模块阈值：超过±阈值会触发超标/偏低告警">大类阈值</th>
-                <th class="r" title="偏离Δ=实际占比-目标占比（单位pp）">偏离</th>
-                <th title="模块状态：正常/大类超标/大类偏低">大类状态</th>
+                <th>指标</th>
+                <th>周线</th>
+                <th>日线</th>
+                <th>4H</th>
               </tr>
             </thead>
-            <tbody></tbody>
+            <tbody id="techTableBody">
+              <tr><td colspan="4"><div class="loading">加载技术数据...</div></td></tr>
+            </tbody>
           </table>
         </div>
       </section>
 
       <section>
-        <h2>趋势图 · 历史快照<span class="hint">所有更新自动归档到 <code style="background:var(--bg-2);padding:2px 6px;border-radius:4px">data/history.json</code></span></h2>
-        <div class="trends" id="trends"></div>
+        <h2>关键价位</h2>
+        <table class="levels-table">
+          <thead>
+            <tr>
+              <th>类型</th>
+              <th>价位</th>
+              <th>说明</th>
+            </tr>
+          </thead>
+          <tbody id="levelsTableBody">
+            <tr><td class="support">强支撑</td><td class="num">4360</td><td>200日均线</td></tr>
+            <tr><td class="support">支撑</td><td class="num">4450</td><td>前低</td></tr>
+            <tr><td class="support">支撑</td><td class="num">4500</td><td>心理关口</td></tr>
+            <tr><td class="resistance">阻力</td><td class="num">4600</td><td>前高</td></tr>
+            <tr><td class="resistance">强阻力</td><td class="num">4700</td><td>年内高点</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+    <!-- Tab 3: 宏观驱动 -->
+    <div class="tab-pane" id="tab-macro" role="tabpanel">
+      <section>
+        <h2>核心驱动指标</h2>
+        <div class="indicator-grid" id="coreDrivers">
+          <div class="loading">加载数据...</div>
+        </div>
       </section>
 
       <section>
-        <h2>更新历史 · Timeline</h2>
-        <div class="alerts">
-          <div style="display:grid;grid-template-columns:90px 1fr 110px 70px;gap:12px;font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--bg-2)">
-            <div>日期</div><div>备注</div><div style="text-align:right">总盘</div><div style="text-align:right">环比</div>
+        <h2>央行购金动态</h2>
+        <div id="centralBankGold">
+          <div class="loading">加载数据...</div>
+        </div>
+      </section>
+
+      <section>
+        <h2>CFTC持仓</h2>
+        <div id="cftcData">
+          <div class="loading">加载数据...</div>
+        </div>
+      </section>
+
+      <section>
+        <h2>黄金ETF持仓</h2>
+        <div id="goldETF">
+          <div class="loading">加载数据...</div>
+        </div>
+      </section>
+      <p class="data-source">央行购金来源：世界黄金协会 · CFTC来源：COT报告</p>
+    </div>
+
+    <!-- Tab 4: 财经日历 -->
+    <div class="tab-pane" id="tab-calendar" role="tabpanel">
+      <section>
+        <h2>重要财经事件</h2>
+        <div id="calendarContainer">
+          <div class="loading">加载日历...</div>
+        </div>
+      </section>
+      <p class="data-source">日期为预估值，请以官方公告为准</p>
+    </div>
+
+    <!-- Tab 5: 风险雷达 -->
+    <div class="tab-pane" id="tab-radar" role="tabpanel">
+      <section>
+        <h2>动态风险评估</h2>
+        <div class="radar-layout">
+          <div class="gauge-container">
+            <canvas class="gauge-canvas" id="riskGauge"></canvas>
           </div>
-          <div class="timeline" id="timeline"></div>
+          <div class="risk-container">
+            <div class="risk-card">
+              <h3>市场风险</h3>
+              <div id="marketRiskBars"><div class="loading">加载中...</div></div>
+            </div>
+            <div class="risk-card">
+              <h3>宏观风险</h3>
+              <div id="macroRiskBars"><div class="loading">加载中...</div></div>
+            </div>
+            <div class="risk-card">
+              <h3>流动性风险</h3>
+              <div id="liquidityRiskBars"><div class="loading">加载中...</div></div>
+            </div>
+            <div class="risk-card">
+              <h3>地缘风险</h3>
+              <div id="geopoliticalRiskBars"><div class="loading">加载中...</div></div>
+            </div>
+          </div>
         </div>
       </section>
+    </div>
 
+    <!-- Tab 6: 设置 -->
+    <div class="tab-pane" id="tab-settings" role="tabpanel">
       <section>
-        <h2>🚀 长期增长预测<span class="hint">基于 expectedReturn 加权 · 三档情景对比</span></h2>
-        <div class="lia-card" id="growth-projection"></div>
-      </section>
-
-      <section>
-        <h2>🏁 里程碑 · FIRE 路径动作清单<span class="hint">来自资产配置 V2.0 战术执行手册 P0/P1/P2/P3</span></h2>
-        <div class="lia-card" id="milestones"></div>
-      </section>
-    </div>
-  </div>
-
-  <!-- =========== Tab 2: 负债与刚性 =========== -->
-  <div class="tab-pane" id="tab-liab">
-    <div class="kpis" id="liab-kpis"></div>
-
-    <section>
-      <h2>负债清单</h2>
-      <div id="liab-list"></div>
-    </section>
-
-    <section>
-      <h2>循环收支 · 月度净流出<span class="hint">以月为周期，自动按汇率折算 RMB</span></h2>
-      <div id="recurring-monthly"></div>
-    </section>
-
-    <section>
-      <h2>保单缴费日历<span class="hint">按到期日排序，倒计时 + 剩余应缴尾款</span></h2>
-      <div id="policy-list"></div>
-    </section>
-
-    <section>
-      <h2>未来 20 年现金流瀑布<span class="hint">绿色 chip = 减负 / 红色 chip = 新支出 · 净额右下方 ▲▼ 显示同比变化</span></h2>
-      <div class="lia-card" id="waterfall-wrap">
-        <div class="waterfall" id="waterfall"></div>
-      </div>
-    </section>
-  </div>
-
-  <!-- =========== Tab 3: 现金流追踪 =========== -->
-  <div class="tab-pane" id="tab-cash">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:14px;flex-wrap:wrap">
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="color:var(--text-2);font-size:var(--fs-xs);text-transform:uppercase;letter-spacing:.4px">年份</span>
-        <select id="month-picker" class="date-picker"></select>
-      </div>
-      <div style="color:var(--text-3);font-size:var(--fs-xs)"><code style="background:var(--bg-2);padding:1px 5px;border-radius:3px">data/transactions/yearly/YYYY.json</code></div>
-    </div>
-
-    <div class="kpis" id="cash-kpis"></div>
-
-    <section>
-      <h2>支出大类分布<span class="hint">本年累计</span></h2>
-      <div class="cf-grid">
-        <div class="lia-card">
-          <div style="font-size:12px;color:var(--text-2);margin-bottom:8px">本年支出按类目</div>
-          <div class="cat-bar" id="cat-bar"></div>
-          <div class="cat-list" id="cat-list"></div>
+        <div class="settings-section">
+          <h3>数据刷新频率</h3>
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">自动刷新</div>
+              <div class="settings-desc">页面数据自动更新间隔</div>
+            </div>
+            <select class="settings-select" id="refreshInterval" onchange="saveSettings()">
+              <option value="60000">1分钟</option>
+              <option value="180000" selected>3分钟</option>
+              <option value="300000">5分钟</option>
+              <option value="0">手动刷新</option>
+            </select>
+          </div>
         </div>
-        <div class="lia-card">
-          <div style="font-size:12px;color:var(--text-2);margin-bottom:8px">本年支出按人</div>
-          <div class="cat-bar" id="persona-bar"></div>
-          <div class="cat-list" id="persona-list"></div>
+
+        <div class="settings-section">
+          <h3>关于</h3>
+          <div class="about-text">
+            <p><strong>数据来源：</strong></p>
+            <ul style="margin:4px 0;padding-left:16px;color:var(--text-2)">
+              <li>黄金/原油价格：腾讯财经</li>
+              <li>汇率：exchangerate-api.com</li>
+              <li>央行购金：世界黄金协会</li>
+              <li>CFTC持仓：美国商品期货交易委员会</li>
+            </ul>
+            <p style="margin-top:12px"><strong>免责声明：</strong></p>
+            <p style="color:var(--text-2)">本看板数据仅供参考，不构成任何投资建议。投资有风险，决策需谨慎。请在做出任何投资决策前进行独立研究。</p>
+            <p style="margin-top:12px;color:var(--text-3)">版本 2.0 · 2026-06</p>
+          </div>
         </div>
-      </div>
-    </section>
-
-    <section>
-      <h2>预算 vs 实际<span class="hint">recurring.json 的循环项 vs 本年实际兑现（年化）</span></h2>
-      <div class="lia-card">
-        <table class="lia-table" id="budget-vs-actual">
-          <thead><tr><th>循环项</th><th class="r">应付（年）</th><th class="r">实付</th><th class="r">差异</th><th>状态</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-
-    <section>
-      <h2>本年大类明细<span class="hint">按金额排序</span></h2>
-      <div class="lia-card">
-        <table class="lia-table" id="tx-list">
-          <thead><tr><th>年份</th><th>类目</th><th>名称</th><th>谁</th><th class="r">金额 (RMB)</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-  </div>
-
-  <!-- =========== Tab 2: 目标配置 =========== -->
-  <div class="tab-pane" id="tab-target">
-    <div class="kpis" id="target-kpis"></div>
-    <div id="target-content"></div>
-  </div>
-
-  <!-- =========== Tab 4: 税务计算 =========== -->
-  <div class="tab-pane" id="tab-tax">
-    <div class="kpis" id="tax-kpis"></div>
-    <div id="tax-content"></div>
-  </div>
-
-  <footer>
-    <code>data/target.json</code> · <code>history.json</code> · <code>liabilities.json</code> · <code>recurring.json</code> · <code>income_events.json</code> · <code>transactions/</code>
-    　|　Bloomberg Dark · JetBrains Mono · 小龙猫 @ <code>memory/areas/life_planning/asset_dashboard/</code>
-  </footer>
-</div>
-
-<div class="modal-mask" id="modal-mask"></div>
-<div class="modal" id="help-modal" role="dialog" aria-modal="true" aria-label="新手入门">
-  <div class="modal-head">
-    <div class="modal-title">新手入门 · 怎么读这张看板</div>
-    <button class="btn" id="help-close" type="button">关闭</button>
-  </div>
-  <div class="modal-body">
-    <h3>核心口径</h3>
-    <ul>
-      <li><b>市值（RMB）</b>：所有资产按汇率折算到人民币的市值口径。</li>
-      <li><b>实际占比</b>：该模块/子项市值 ÷ 总盘。</li>
-      <li><b>Δ（pp）</b>：偏离度 = 实际占比 − 目标占比，单位是百分点（pp），不是涨跌幅。</li>
-      <li><b>阈值</b>：超过阈值会标为超/偏低；一般用于再平衡提醒。</li>
-    </ul>
-    <h3>推荐阅读顺序</h3>
-    <ul>
-      <li>顶部 KPI：先看红线（腾讯单一敞口、RMB占比）和告警数量。</li>
-      <li>模块画像：看哪些模块超/偏低；再看具体子项的 Δ(pp)。</li>
-      <li>池分离：RMB 池与海外池物理隔离，不能互相“补位”。</li>
-    </ul>
-    <div class="jump-row">
-      <button class="btn ghost" data-jump="#jump-kpis" type="button">跳到 KPI</button>
-      <button class="btn ghost" data-jump="#jump-mods" type="button">跳到 模块</button>
-      <button class="btn ghost" data-jump="#jump-pools" type="button">跳到 池分离</button>
+      </section>
     </div>
-    <h3>交互</h3>
-    <ul>
-      <li>悬停任意数字/表头：显示口径说明。</li>
-      <li>移动端：点一下显示说明，再点空白关闭。</li>
-    </ul>
   </div>
-  <div class="modal-foot">
-    <button class="btn primary" id="beginner-on" type="button">开启新手模式</button>
-    <button class="btn" id="beginner-off-2" type="button">关闭新手模式</button>
-  </div>
-</div>
-<div class="tt-bubble" id="tt" role="tooltip" aria-hidden="true">
-  <div class="tt-title" id="tt-title" style="display:none"></div>
-  <div class="tt-body" id="tt-body"></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-<script src="./core.js"></script>
-<script src="./app.js"></script>
-<script src="./liabilities.js"></script>
-<script src="./cashflow.js"></script>
-<script src="./tax.js"></script>
-<script src="./target.js"></script>
+<!-- 固定底部免责 -->
+<div style="position:fixed;bottom:0;left:0;right:0;background:var(--bg-1);border-top:1px solid var(--line);padding:8px 16px;text-align:center;font-size:10px;color:var(--text-3);z-index:999">
+  本看板数据仅供参考，不构成任何投资建议
+</div>
+
+<!-- 脚本 -->
+<script src="api-proxy.js"></script>
+<script src="indicators.js"></script>
+<script src="gold.js"></script>
+<script src="macro.js"></script>
+<script src="calendar.js"></script>
+<script src="radar.js"></script>
 <script>
-  // Tab 切换 + URL hash 路由（方便外部用 #liab / #cash / #tax 直链跳转或截图）
-  function activateTab(tab) {
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
-    document.querySelectorAll(".tab-pane").forEach(p => p.classList.toggle("active", p.id === "tab-" + tab));
-    // 切换到税务 Tab 时自动渲染
-    if (tab === "tax" && typeof renderTaxTab === "function") {
-      renderTaxTab();
+/**
+ * 黄金决策看板 - 主控制器
+ */
+
+// 刷新间隔配置
+let refreshIntervalMs = 180000; // 默认3分钟
+let refreshTimer = null;
+
+// Tab 切换
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    
+    if (btn.dataset.tab === 'gold') loadGoldData();
+    if (btn.dataset.tab === 'tech') loadTechData();
+    if (btn.dataset.tab === 'macro') loadMacroData();
+    if (btn.dataset.tab === 'calendar') loadCalendarData();
+    if (btn.dataset.tab === 'radar') loadRadarData();
+  });
+});
+
+// 时间更新
+function updateTime() {
+  const now = new Date();
+  document.getElementById('currentTime').textContent = now.toLocaleTimeString('zh-CN', { 
+    hour: '2-digit', minute: '2-digit', second: '2-digit' 
+  });
+}
+updateTime();
+setInterval(updateTime, 1000);
+
+// 市场脉搏
+async function loadMarketPulse() {
+  try {
+    const data = await window.ApiProxy.fetchMarketIndices();
+    renderPulseBar(data?.items || []);
+    
+    if (data?.updated_at) {
+      const date = new Date(data.updated_at);
+      document.getElementById('lastUpdate').textContent = '更新 ' + 
+        date.toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'});
     }
-    // 切换到目标配置 Tab 时自动渲染
-    if (tab === "target" && typeof renderTargetTab === "function") {
-      renderTargetTab();
+  } catch (e) {
+    console.warn('市场脉搏加载失败:', e);
+    document.getElementById('pulseBar').innerHTML = '<span class="pulse-loading">数据加载失败</span><button class="pulse-refresh" onclick="loadMarketPulse()">↻</button>';
+  }
+}
+
+function renderPulseBar(items) {
+  const bar = document.getElementById('pulseBar');
+  if (!items || items.length === 0) {
+    bar.innerHTML = '<span class="pulse-loading">暂无数据</span><button class="pulse-refresh" onclick="loadMarketPulse()">↻</button>';
+    return;
+  }
+  
+  const now = new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'});
+  
+  bar.innerHTML = items.slice(0, 5).map(item => {
+    const cls = item.changePct > 0 ? 'up' : item.changePct < 0 ? 'down' : 'flat';
+    const sign = item.changePct > 0 ? '+' : '';
+    return `<div class="pulse-item">
+      <span class="pulse-name">${item.name}</span>
+      <span class="pulse-price">${item.price?.toFixed(item.price > 100 ? 2 : 4) || '—'}</span>
+      <span class="pulse-change ${cls}">${sign}${item.changePct?.toFixed(2) || 0}%</span>
+    </div>`;
+  }).join('') + `<span class="pulse-time">${now}</span><button class="pulse-refresh" onclick="loadMarketPulse()">↻</button>`;
+}
+
+// 黄金数据
+async function loadGoldData() {
+  if (window._goldLoaded) return;
+  window._goldLoaded = true;
+  try {
+    await window.GoldModule.load();
+  } catch (e) {
+    console.error('黄金数据加载失败:', e);
+  }
+}
+
+// 技术面数据
+async function loadTechData() {
+  if (window._techLoaded) return;
+  window._techLoaded = true;
+  
+  try {
+    const historyData = await window.ApiProxy.fetchGoldHistory('day', 200);
+    if (!historyData) return;
+
+    // 计算各周期指标
+    const indicators = {
+      ma20: window.Indicators?.calcMA(historyData, 20)?.pop(),
+      ma50: window.Indicators?.calcMA(historyData, 50)?.pop(),
+      ma200: window.Indicators?.calcMA(historyData, 200)?.pop(),
+      rsi: window.Indicators?.calcRSI(historyData, 14)?.pop(),
+      macd: window.Indicators?.calcMACD(historyData)
+    };
+
+    const currentPrice = historyData[historyData.length - 1]?.close;
+    
+    // 渲染表格
+    const tbody = document.getElementById('techTableBody');
+    if (tbody && indicators) {
+      const renderTrend = (value, price) => {
+        if (!value || !price) return '<span class="neutral">—</span>';
+        const diff = ((price - value.value) / value.value * 100).toFixed(1);
+        if (diff > 0.5) return `<span class="up">↑ ${value.value.toFixed(0)}</span>`;
+        if (diff < -0.5) return `<span class="down">↓ ${value.value.toFixed(0)}</span>`;
+        return `<span class="neutral">→ ${value.value.toFixed(0)}</span>`;
+      };
+
+      tbody.innerHTML = `
+        <tr>
+          <td>MA20</td>
+          <td class="num">${renderTrend(indicators.ma20, currentPrice)}</td>
+          <td class="num">${renderTrend(indicators.ma20, currentPrice)}</td>
+          <td class="num">${renderTrend(indicators.ma20, currentPrice)}</td>
+        </tr>
+        <tr>
+          <td>MA50</td>
+          <td class="num">${renderTrend(indicators.ma50, currentPrice)}</td>
+          <td class="num">${renderTrend(indicators.ma50, currentPrice)}</td>
+          <td class="num">${renderTrend(indicators.ma50, currentPrice)}</td>
+        </tr>
+        <tr>
+          <td>MA200</td>
+          <td class="num">${renderTrend(indicators.ma200, currentPrice)}</td>
+          <td class="num">${renderTrend(indicators.ma200, currentPrice)}</td>
+          <td class="num">${renderTrend(indicators.ma200, currentPrice)}</td>
+        </tr>
+        <tr>
+          <td>RSI(14)</td>
+          <td class="num" colspan="3">${indicators.rsi ? (indicators.rsi.value > 70 ? '<span class="up">过买 ' + indicators.rsi.value.toFixed(0) + '</span>' : indicators.rsi.value < 30 ? '<span class="down">过卖 ' + indicators.rsi.value.toFixed(0) + '</span>' : indicators.rsi.value.toFixed(0)) : '—'}</td>
+        </tr>
+        <tr>
+          <td>MACD</td>
+          <td class="num" colspan="3">${indicators.macd?.macd?.length ? (indicators.macd.macd[indicators.macd.macd.length-1].histogram > 0 ? '<span class="up">金叉</span>' : '<span class="down">死叉</span>') : '—'}</td>
+        </tr>
+      `;
+    }
+  } catch (e) {
+    console.error('技术数据加载失败:', e);
+  }
+}
+
+// 宏观数据
+async function loadMacroData() {
+  if (window._macroLoaded) return;
+  window._macroLoaded = true;
+  try {
+    await window.MacroModule.load();
+  } catch (e) {
+    console.error('宏观数据加载失败:', e);
+  }
+}
+
+// 财经日历
+async function loadCalendarData() {
+  if (window._calendarLoaded) return;
+  window._calendarLoaded = true;
+  try {
+    await window.CalendarModule.load();
+  } catch (e) {
+    console.error('日历数据加载失败:', e);
+  }
+}
+
+// 风险雷达
+async function loadRadarData() {
+  if (window._radarLoaded) return;
+  window._radarLoaded = true;
+  try {
+    await window.RadarModule.load();
+  } catch (e) {
+    console.error('风险雷达加载失败:', e);
+  }
+}
+
+// 设置保存
+function saveSettings() {
+  const interval = document.getElementById('refreshInterval')?.value || 180000;
+  refreshIntervalMs = parseInt(interval);
+  localStorage.setItem('fdp_refresh_interval', refreshIntervalMs);
+  
+  // 重启刷新定时器
+  if (refreshTimer) clearInterval(refreshTimer);
+  if (refreshIntervalMs > 0) {
+    refreshTimer = setInterval(() => {
+      loadMarketPulse();
+    }, refreshIntervalMs);
+  }
+}
+
+function loadSettings() {
+  const saved = localStorage.getItem('fdp_refresh_interval');
+  if (saved) {
+    refreshIntervalMs = parseInt(saved);
+    const select = document.getElementById('refreshInterval');
+    if (select) {
+      select.value = refreshIntervalMs;
     }
   }
-  document.querySelectorAll(".tab-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      activateTab(btn.dataset.tab);
-      history.replaceState(null, "", "#" + btn.dataset.tab);
-    });
-  });
-  (function () {
-    const h = (location.hash || "").replace("#", "");
-    if (h && document.getElementById("tab-" + h)) activateTab(h);
-  })();
-  window.addEventListener("hashchange", () => {
-    const h = location.hash.replace("#", "");
-    if (h && document.getElementById("tab-" + h)) activateTab(h);
-  });
+}
 
-  (function () {
-    const tt = document.getElementById("tt");
-    const ttBody = document.getElementById("tt-body");
-    const ttTitle = document.getElementById("tt-title");
-    let pinned = false;
-    let activeEl = null;
-    let raf = 0;
-
-    function getTip(el) {
-      if (!el) return "";
-      const v = el.getAttribute("data-tip") || "";
-      return v.trim();
-    }
-    function ensureTip(el) {
-      if (!el) return;
-      const t = el.getAttribute("title");
-      if (t && !el.getAttribute("data-tip")) {
-        el.setAttribute("data-tip", t);
-        el.removeAttribute("title");
-      }
-    }
-    function findTipTarget(start) {
-      let el = start;
-      for (let i = 0; i < 6 && el; i++, el = el.parentElement) {
-        ensureTip(el);
-        if (getTip(el)) return el;
-      }
-      return null;
-    }
-    function setContent(text) {
-      const parts = String(text || "").split("\n").map(s => s.trim()).filter(Boolean);
-      if (parts.length > 1) {
-        ttTitle.style.display = "";
-        ttTitle.textContent = parts[0];
-        ttBody.textContent = parts.slice(1).join("\n");
-      } else {
-        ttTitle.style.display = "none";
-        ttTitle.textContent = "";
-        ttBody.textContent = parts[0] || "";
-      }
-    }
-    function place(el) {
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      const pad = 10;
-      tt.style.left = "0px";
-      tt.style.top = "0px";
-      const w = tt.offsetWidth || 320;
-      const h = tt.offsetHeight || 80;
-      const vw = window.innerWidth, vh = window.innerHeight;
-      let x = r.left + (r.width / 2) - (w / 2);
-      let y = r.top - h - 10;
-      if (y < pad) y = r.bottom + 10;
-      x = Math.max(pad, Math.min(vw - w - pad, x));
-      y = Math.max(pad, Math.min(vh - h - pad, y));
-      tt.style.left = Math.round(x) + "px";
-      tt.style.top = Math.round(y) + "px";
-    }
-    function show(el) {
-      const tip = getTip(el);
-      if (!tip) return;
-      activeEl = el;
-      setContent(tip);
-      tt.classList.add("show");
-      tt.setAttribute("aria-hidden", "false");
-      if (raf) cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => place(el));
-    }
-    function hide() {
-      if (pinned) return;
-      activeEl = null;
-      tt.classList.remove("show");
-      tt.setAttribute("aria-hidden", "true");
-    }
-    document.addEventListener("pointerover", (e) => {
-      if (pinned) return;
-      if (e.pointerType && e.pointerType !== "mouse") return;
-      const el = findTipTarget(e.target);
-      if (!el) return;
-      show(el);
-    }, { passive: true });
-    document.addEventListener("pointerout", (e) => {
-      if (pinned) return;
-      if (e.pointerType && e.pointerType !== "mouse") return;
-      const rel = e.relatedTarget;
-      if (activeEl && rel && activeEl.contains(rel)) return;
-      hide();
-    }, { passive: true });
-    document.addEventListener("focusin", (e) => {
-      if (pinned) return;
-      const el = findTipTarget(e.target);
-      if (el) show(el);
-    }, { passive: true });
-    document.addEventListener("focusout", () => { hide(); }, { passive: true });
-    document.addEventListener("click", (e) => {
-      const el = findTipTarget(e.target);
-      if (el) {
-        if (pinned && activeEl === el) {
-          pinned = false;
-          hide();
-        } else {
-          pinned = true;
-          show(el);
-        }
-        return;
-      }
-      if (pinned) {
-        pinned = false;
-        hide();
-      }
-    });
-    window.addEventListener("scroll", () => { if (activeEl) place(activeEl); }, { passive: true });
-    window.addEventListener("resize", () => { if (activeEl) place(activeEl); }, { passive: true });
-  })();
-
-  (function () {
-    const mask = document.getElementById("modal-mask");
-    const modal = document.getElementById("help-modal");
-    const openBtn = document.getElementById("help-open");
-    const closeBtn = document.getElementById("help-close");
-    const beginnerStrip = document.getElementById("beginner-strip");
-    const advancedStrip = document.getElementById("advanced-strip");
-    const advancedAssets = document.getElementById("advanced-assets");
-    const advancedToggle = document.getElementById("advanced-toggle");
-    const beginnerOn = document.getElementById("beginner-on");
-    const beginnerOff = document.getElementById("beginner-off");
-    const beginnerOff2 = document.getElementById("beginner-off-2");
-    const LS_KEY = "afd_beginner";
-    const LS_ADV = "afd_advanced_visible";
-
-    function setBeginner(on) {
-      const v = !!on;
-      localStorage.setItem(LS_KEY, v ? "1" : "0");
-      beginnerStrip.style.display = v ? "" : "none";
-      if (advancedStrip) advancedStrip.style.display = v ? "" : "none";
-      if (advancedAssets) {
-        const advVisible = localStorage.getItem(LS_ADV) === "1";
-        advancedAssets.style.display = v && !advVisible ? "none" : "";
-        if (advancedToggle) advancedToggle.textContent = (v && !advVisible) ? "展开高级" : "收起高级";
-      }
-    }
-    function getBeginner() {
-      return localStorage.getItem(LS_KEY) === "1";
-    }
-    function setAdvancedVisible(v) {
-      localStorage.setItem(LS_ADV, v ? "1" : "0");
-      if (advancedAssets) advancedAssets.style.display = v ? "" : "none";
-      if (advancedToggle) advancedToggle.textContent = v ? "收起高级" : "展开高级";
-    }
-    function open() {
-      mask.classList.add("show");
-      modal.classList.add("show");
-    }
-    function close() {
-      mask.classList.remove("show");
-      modal.classList.remove("show");
-    }
-    openBtn.addEventListener("click", open);
-    closeBtn.addEventListener("click", close);
-    mask.addEventListener("click", close);
-    beginnerOn.addEventListener("click", () => setBeginner(true));
-    beginnerOff.addEventListener("click", () => setBeginner(false));
-    beginnerOff2.addEventListener("click", () => setBeginner(false));
-    if (advancedToggle) {
-      advancedToggle.addEventListener("click", () => {
-        const visible = advancedAssets && advancedAssets.style.display !== "none";
-        setAdvancedVisible(!visible);
-      });
-    }
-
-    modal.addEventListener("click", (e) => {
-      const btn = e.target && e.target.closest ? e.target.closest("[data-jump]") : null;
-      if (!btn) return;
-      const sel = btn.getAttribute("data-jump");
-      if (!sel) return;
-      close();
-      const tab = document.querySelector('.tab-btn[data-tab="assets"]');
-      if (tab && !tab.classList.contains("active")) tab.click();
-      requestAnimationFrame(() => {
-        const el = document.querySelector(sel);
-        if (el && el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-    });
-
-    setBeginner(getBeginner());
-    if (getBeginner() && localStorage.getItem(LS_ADV) == null) {
-      localStorage.setItem(LS_ADV, "0");
-      setAdvancedVisible(false);
-    }
-  })();
+// 初始化
+document.addEventListener('DOMContentLoaded', function() {
+  loadSettings();
+  loadMarketPulse();
+  
+  // 自动刷新
+  if (refreshIntervalMs > 0) {
+    refreshTimer = setInterval(loadMarketPulse, refreshIntervalMs);
+  }
+  
+  // 延迟加载黄金数据
+  setTimeout(loadGoldData, 500);
+});
 </script>
 </body>
 </html>

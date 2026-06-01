@@ -1,0 +1,19 @@
+{
+  "source": "近10年现货黄金月度涨跌统计 (2016-2025)",
+  "updated": "2026-01-01",
+  "note": "数据基于伦敦金现(LBMA)月度收盘价计算，包含涨跌次数统计和中位数涨幅",
+  "months": [
+    { "month": 1, "up": 7, "down": 3, "median_pct": 1.8, "note": "年初避险需求通常较强" },
+    { "month": 2, "up": 6, "down": 4, "median_pct": 0.6, "note": "春节后实物需求回落" },
+    { "month": 3, "up": 6, "down": 4, "median_pct": 0.4, "note": "美联储政策预期主导" },
+    { "month": 4, "up": 5, "down": 5, "median_pct": 0.2, "note": "波动加大，方向不明" },
+    { "month": 5, "up": 5, "down": 5, "median_pct": -0.3, "note": "通常为淡季" },
+    { "month": 6, "up": 5, "down": 5, "median_pct": 0.1, "note": "年中盘整" },
+    { "month": 7, "up": 6, "down": 4, "median_pct": 0.7, "note": "印度婚礼季前备货" },
+    { "month": 8, "up": 7, "down": 3, "median_pct": 1.2, "note": "旺季启动" },
+    { "month": 9, "up": 7, "down": 3, "median_pct": 1.5, "note": "传统旺季最强势月份" },
+    { "month": 10, "up": 5, "down": 5, "median_pct": 0.3, "note": "波动加大" },
+    { "month": 11, "up": 6, "down": 4, "median_pct": 0.8, "note": "避险需求上升" },
+    { "month": 12, "up": 7, "down": 3, "median_pct": 1.2, "note": "年末收官，通常偏强" }
+  ]
+}
