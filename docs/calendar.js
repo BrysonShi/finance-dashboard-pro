@@ -14,39 +14,13 @@ window.CalendarModule = (function() {
   // =============================================================
 
   const countryNames = {
-    'US': '美国',
-    'CN': '中国',
-    'EU': '欧洲',
-    'JP': '日本',
-    'UK': '英国',
-    'AU': '澳大利亚',
-    'CA': '加拿大'
-  };
-
-  const importanceLabels = {
-    'high': '高',
-    'medium': '中',
-    'low': '低'
+    'US': '美国', 'CN': '中国', 'EU': '欧洲',
+    'JP': '日本', 'UK': '英国', 'AU': '澳大利亚', 'CA': '加拿大'
   };
 
   // =============================================================
   // 工具函数
   // =============================================================
-
-  /**
-   * 格式化日期显示
-   */
-  function formatDate(dateStr, timeStr) {
-    if (!dateStr) return { date: '—', time: '—' };
-    const parts = dateStr.split('-');
-    const year = parseInt(parts[0]);
-    const month = parseInt(parts[1]);
-    const day = parseInt(parts[2]);
-    return {
-      date: `${month}月${day}日`,
-      time: timeStr || '不定时'
-    };
-  }
 
   /**
    * 计算距离今天的天数
@@ -57,28 +31,61 @@ window.CalendarModule = (function() {
     today.setHours(0, 0, 0, 0);
     const target = new Date(dateStr);
     target.setHours(0, 0, 0, 0);
-    const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
-    return diff;
+    return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
   }
 
   /**
-   * 获取日期标签
+   * 判断事件是否已过期
    */
-  function getDateTag(dateStr) {
-    const days = daysUntil(dateStr);
-    if (days === null) return '';
-    if (days === 0) return '<span style="background:var(--danger);color:#fff;padding:1px 4px;border-radius:3px;font-size:9px">今日</span>';
-    if (days > 0 && days <= 3) return '<span style="background:var(--warn);color:#000;padding:1px 4px;border-radius:3px;font-size:9px">' + days + '天后</span>';
-    if (days > 3 && days <= 7) return '<span style="background:var(--accent);color:#000;padding:1px 4px;border-radius:3px;font-size:9px">' + days + '天后</span>';
+  function isPast(dateStr) {
+    return daysUntil(dateStr) < 0;
+  }
+
+  /**
+   * 获取倒计时标签
+   */
+  function getCountdownTag(days) {
+    if (days === 0) return '<span class="calendar-countdown soon">今日</span>';
+    if (days === 1) return '<span class="calendar-countdown soon">明日</span>';
+    if (days > 0 && days <= 3) return `<span class="calendar-countdown soon">${days}天后</span>`;
+    if (days > 3 && days <= 7) return `<span class="calendar-countdown upcoming">${days}天后</span>`;
+    if (days > 0) return `<span class="calendar-countdown normal">${days}天后</span>`;
     return '';
   }
 
   /**
-   * 获取事件重要程度标签
+   * 按月分组事件
    */
-  function getImportanceTag(importance) {
-    const labels = importanceLabels[importance] || '低';
-    return `<span class="calendar-importance ${importance || 'low'}">${labels}</span>`;
+  function groupByMonth(events) {
+    const groups = {};
+    
+    events.forEach(e => {
+      const date = new Date(e.date);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      if (!groups[key]) {
+        groups[key] = [];
+      }
+      groups[key].push(e);
+    });
+
+    // 转换为排序后的数组
+    return Object.keys(groups)
+      .sort()
+      .map(key => ({
+        month: key,
+        monthLabel: formatMonthLabel(key),
+        events: groups[key].sort((a, b) => new Date(a.date) - new Date(b.date))
+      }));
+  }
+
+  /**
+   * 格式化月份标签
+   */
+  function formatMonthLabel(monthKey) {
+    const [year, month] = monthKey.split('-');
+    const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月',
+                        '七月', '八月', '九月', '十月', '十一月', '十二月'];
+    return `${year}年 ${monthNames[parseInt(month) - 1]}`;
   }
 
   // =============================================================
@@ -86,73 +93,67 @@ window.CalendarModule = (function() {
   // =============================================================
 
   /**
-   * 渲染事件列表
+   * 渲染单个事件
    */
-  function renderEvents(events) {
-    const container = document.getElementById('calendarList');
-    if (!container) return;
-
-    if (!events || events.length === 0) {
-      container.innerHTML = '<div class="loading">暂无数据</div>';
-      return;
-    }
-
-    // 按日期排序（即将到来的事件优先）
-    const sortedEvents = [...events].sort((a, b) => {
-      return new Date(a.date) - new Date(b.date);
-    });
-
-    container.innerHTML = sortedEvents.map(e => {
-      const { date, time } = formatDate(e.date, e.time);
-      const dateTag = getDateTag(e.date);
-      const importanceTag = getImportanceTag(e.importance);
-      const country = countryNames[e.country] || e.country;
-      const note = e.note ? `<div style="font-size:10px;color:var(--text-3);margin-top:2px">${e.note}</div>` : '';
-
-      return `<div class="calendar-item ${e.importance || 'low'}">
-        <div class="calendar-date">${date}${dateTag ? '<br>' + dateTag : ''}<br><span style="color:var(--text-3);font-size:9px">${time}</span></div>
-        <div class="calendar-country">${country}</div>
-        <div class="calendar-event">${e.event}${note}</div>
-        <div style="text-align:right">${importanceTag}</div>
-      </div>`;
-    }).join('');
+  function renderEventItem(e) {
+    const date = new Date(e.date);
+    const day = date.getDate();
+    const days = daysUntil(e.date);
+    const isPastEvent = isPast(e.date);
+    const pastClass = isPastEvent ? 'past' : '';
+    const importanceClass = e.importance || 'low';
+    
+    const countdownTag = !isPastEvent ? getCountdownTag(days) : '';
+    const timeStr = e.time === '待定' || !e.time ? '待定' : e.time;
+    
+    return `
+      <div class="calendar-item ${pastClass} ${importanceClass}">
+        <div class="calendar-date">
+          ${day}日
+          <br>
+          <span style="color:var(--text-3);font-size:9px">${timeStr}</span>
+        </div>
+        <div class="calendar-country">${countryNames[e.country] || e.country}</div>
+        <div class="calendar-event">${e.event}</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          ${countdownTag}
+          <span class="calendar-importance ${importanceClass}">${e.importance === 'high' ? '高' : e.importance === 'medium' ? '中' : '低'}</span>
+        </div>
+      </div>
+    `;
   }
 
   /**
-   * 渲染即将到来的重要事件（高重要性）
+   * 渲染事件列表（按月分组）
    */
-  function renderUpcoming(events) {
-    const container = document.getElementById('upcomingEvents');
+  function renderEvents(events) {
+    const container = document.getElementById('calendarContainer');
     if (!container) return;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const nextWeek = new Date(today);
-    nextWeek.setDate(nextWeek.getDate() + 14);
-
-    const upcoming = events.filter(e => {
-      if (e.importance !== 'high') return false;
-      const eventDate = new Date(e.date);
-      return eventDate >= today && eventDate <= nextWeek;
-    }).slice(0, 5);
-
-    if (upcoming.length === 0) {
-      container.innerHTML = '<div style="color:var(--text-3);font-size:12px;padding:10px">未来两周无高重要性事件</div>';
+    if (!events || events.length === 0) {
+      container.innerHTML = '<div class="empty-state"><div class="icon">📅</div><div class="text">暂无财经事件</div></div>';
       return;
     }
 
-    container.innerHTML = upcoming.map(e => {
-      const { date, time } = formatDate(e.date, e.time);
-      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)">
-        <div style="text-align:center;min-width:40px">
-          <div style="font-size:16px;font-weight:600;color:var(--text-0)">${new Date(e.date).getDate()}</div>
-          <div style="font-size:10px;color:var(--text-2)">${date.split('月')[0]}月</div>
+    const groups = groupByMonth(events);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    container.innerHTML = groups.map(group => {
+      // 统计该月高重要性事件数
+      const highCount = group.events.filter(e => e.importance === 'high').length;
+      
+      return `
+        <div class="calendar-month">
+          <div class="calendar-month-title">
+            ${group.monthLabel}
+            ${highCount > 0 ? `<span style="color:var(--danger);font-weight:normal;font-size:10px;margin-left:8px">⚠️ ${highCount}个高重要性事件</span>` : ''}
+          </div>
+          <div class="calendar-list">
+            ${group.events.map(renderEventItem).join('')}
+          </div>
         </div>
-        <div style="flex:1">
-          <div style="font-size:12px;color:var(--text-0)">${e.event}</div>
-          <div style="font-size:10px;color:var(--text-2)">${time} · ${countryNames[e.country] || e.country}</div>
-        </div>
-      </div>`;
+      `;
     }).join('');
   }
 
@@ -162,7 +163,6 @@ window.CalendarModule = (function() {
 
   async function load() {
     try {
-      // 从本地JSON文件加载
       const resp = await fetch('data/calendar.json');
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       
@@ -170,44 +170,22 @@ window.CalendarModule = (function() {
       cachedData = data;
 
       renderEvents(data.events || []);
-      
-      // 如果页面有 upcomingEvents 容器，也渲染即将到来的事件
-      renderUpcoming(data.events || []);
 
       return data;
     } catch (e) {
       console.error('日历数据加载失败:', e);
       
-      // 如果本地加载失败，尝试内嵌的 fallback 数据
-      renderEvents(getFallbackEvents());
+      const container = document.getElementById('calendarContainer');
+      if (container) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">📅</div><div class="text">数据加载失败，请稍后重试</div></div>';
+      }
       
-      return cachedData;
+      return null;
     }
-  }
-
-  /**
-   * Fallback 事件数据（内嵌，不依赖网络）
-   */
-  function getFallbackEvents() {
-    return [
-      { date: new Date().toISOString().split('T')[0], time: '20:30', country: 'US', event: '美国非农就业报告', importance: 'high', note: '美联储重点关注' },
-      { date: '2026-06-16', time: '02:00', country: 'US', event: 'FOMC利率决议', importance: 'high', note: '沃什首次主持FOMC会议' },
-      { date: '2026-06-17', time: '02:00', country: 'US', event: '美联储主席沃什新闻发布会', importance: 'high', note: '首次新闻发布会' },
-      { date: '2026-07-03', time: '20:30', country: 'US', event: '美国6月非农就业人口', importance: 'high', note: '夏季就业报告' },
-      { date: '2026-07-10', time: '20:30', country: 'US', event: '美国6月CPI同比', importance: 'high', note: '年中通胀数据' },
-      { date: '2026-07-25', time: '02:00', country: 'US', event: '美联储利率决议', importance: 'high', note: '7月FOMC会议' },
-      { date: '2026-08-05', time: '20:30', country: 'US', event: '美国7月非农就业人口', importance: 'high', note: '夏季就业报告' },
-      { date: '2026-09-02', time: '20:30', country: 'US', event: '美国8月非农就业人口', importance: 'high', note: '劳动节后首个就业报告' },
-      { date: '2026-09-17', time: '02:00', country: 'US', event: '美联储利率决议', importance: 'high', note: '9月FOMC会议' },
-      { date: '2026-11-05', time: '全天', country: 'US', event: '美国总统大选日', importance: 'high', note: '市场可能剧烈波动' },
-      { date: '2026-12-15', time: '02:00', country: 'US', event: '美联储利率决议', importance: 'high', note: '12月FOMC会议（年内最后一次）' },
-      { date: '2026-12-17', time: '02:00', country: 'US', event: '美联储主席鲍威尔新闻发布会', importance: 'high', note: '年度最后一次新闻发布会' }
-    ];
   }
 
   return {
     load,
-    getCachedData: () => cachedData,
-    getFallbackEvents
+    getCachedData: () => cachedData
   };
 })();

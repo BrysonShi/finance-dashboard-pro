@@ -1,30 +1,21 @@
 /**
  * =============================================================
  * API Proxy 模块 - 统一的数据获取入口
- * 纯前端实现，使用CORS代理访问外部API
- * 所有接口均有fallback，保证页面不白屏
+ * 数据源：
+ *   - 汇率: open.er-api.com (CORS支持)
+ *   - 黄金/原油/美股: 腾讯财经 qt.gtimg.cn (JSONP)
+ *   - A股/港股: 新浪财经 hq.sinajs.cn (JSONP)
  * =============================================================
  */
-
 window.ApiProxy = (function() {
   'use strict';
 
   // =============================================================
-  // CORS代理配置
-  // =============================================================
-  const CORS_PROXIES = [
-    'https://corsproxy.io/?',
-    'https://api.allorigins.win/raw?url='
-  ];
-
-  // 备用代理
-  const BACKUP_CORS_PROXY = 'https://api.codetabs.com/v1/proxy?quest=';
-
-  // =============================================================
-  // 缓存配置
+  // 常量配置
   // =============================================================
   const CACHE_PREFIX = 'fdp_';
-  const CACHE_TTL = 5 * 60 * 1000; // 5分钟
+  const CACHE_TTL = 5 * 60 * 1000; // 5分钟缓存
+  const TIMEOUT = 10000; // 10秒超时
 
   // =============================================================
   // 工具函数
@@ -32,8 +23,6 @@ window.ApiProxy = (function() {
 
   /**
    * 获取缓存数据
-   * @param {string} key - 缓存键名
-   * @returns {object|null} - 缓存的数据或null
    */
   function getCache(key) {
     try {
@@ -52,8 +41,6 @@ window.ApiProxy = (function() {
 
   /**
    * 设置缓存数据
-   * @param {string} key - 缓存键名
-   * @param {object} data - 要缓存的数据
    */
   function setCache(key, data) {
     try {
@@ -67,122 +54,56 @@ window.ApiProxy = (function() {
   }
 
   /**
-   * 获取当前使用的代理索引
+   * 带超时的fetch
    */
-  function getProxyIndex() {
-    const idx = parseInt(localStorage.getItem('fdp_proxy_idx') || '0');
-    return idx;
-  }
-
-  /**
-   * 切换到下一个代理
-   */
-  function nextProxy() {
-    const idx = (getProxyIndex() + 1) % CORS_PROXIES.length;
-    localStorage.setItem('fdp_proxy_idx', idx.toString());
-    return idx;
-  }
-
-  /**
-   * 获取当前代理URL
-   */
-  function getCurrentProxy() {
-    return CORS_PROXIES[getProxyIndex()];
-  }
-
-  /**
-   * 构建代理URL
-   * @param {string} targetUrl - 目标URL
-   * @param {string} proxyUrl - 代理URL
-   */
-  function buildProxyUrl(targetUrl, proxyUrl) {
-    // 处理已经编码的URL
-    if (targetUrl.includes('%')) {
-      return proxyUrl + targetUrl;
-    }
-    return proxyUrl + encodeURIComponent(targetUrl);
-  }
-
-  /**
-   * 获取代理后的URL（尝试所有代理）
-   * @param {string} targetUrl - 目标URL
-   * @returns {string} - 代理后的URL
-   */
-  function getProxiedUrl(targetUrl) {
-    return buildProxyUrl(targetUrl, getCurrentProxy());
-  }
-
-  // =============================================================
-  // 核心网络请求函数
-  // =============================================================
-
-  /**
-   * 带重试的fetch请求
-   * @param {string} url - 请求URL
-   * @param {object} options - fetch选项
-   * @param {number} retries - 重试次数
-   * @returns {Promise<object>} - 响应数据
-   */
-  async function fetchWithRetry(url, options = {}, retries = 2) {
-    const attemptProxy = async (proxyIdx) => {
-      if (proxyIdx >= CORS_PROXIES.length) {
-        throw new Error('所有CORS代理都失败');
-      }
-
-      const proxyUrl = CORS_PROXIES[proxyIdx];
-      const proxyUrlFinal = url.includes('%') 
-        ? proxyUrl + url 
-        : proxyUrl + encodeURIComponent(url);
-
-      try {
-        const resp = await fetch(proxyUrlFinal, {
-          ...options,
-          timeout: 10000
+  function fetchWithTimeout(url, options = {}) {
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => reject(new Error('请求超时')), TIMEOUT);
+      fetch(url, options)
+        .then(resp => {
+          clearTimeout(timeoutId);
+          resolve(resp);
+        })
+        .catch(err => {
+          clearTimeout(timeoutId);
+          reject(err);
         });
-        if (!resp.ok) {
-          throw new Error(`HTTP ${resp.status}`);
-        }
-        const text = await resp.text();
-        // 尝试解析JSON
-        try {
-          return JSON.parse(text);
-        } catch {
-          // 如果是HTML响应，可能代理失败了
-          if (text.includes('<html') || text.includes('<!DOCTYPE')) {
-            throw new Error('返回了HTML而非JSON');
-          }
-          return text;
-        }
-      } catch (e) {
-        console.warn(`代理 ${proxyIdx} 失败:`, e.message);
-        return attemptProxy(proxyIdx + 1);
-      }
-    };
-
-    return attemptProxy(getProxyIndex());
+    });
   }
 
   /**
-   * 带超时的fetch请求
-   * @param {string} url - 请求URL
-   * @param {object} options - fetch选项
-   * @param {number} timeout - 超时时间(ms)
+   * JSONP请求（动态创建script标签）
    */
-  async function fetchWithTimeout(url, options = {}, timeout = 10000) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
+  function jsonp(url) {
+    return new Promise((resolve, reject) => {
+      const callbackName = 'jsonp_' + Date.now() + '_' + Math.random().toString(36).substr(2);
+      const script = document.createElement('script');
+      
+      // 超时处理
+      const timeoutId = setTimeout(() => {
+        delete window[callbackName];
+        document.head.removeChild(script);
+        reject(new Error('JSONP请求超时'));
+      }, TIMEOUT);
 
-    try {
-      const resp = await fetch(url, {
-        ...options,
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-      return resp;
-    } catch (e) {
-      clearTimeout(timeoutId);
-      throw e;
-    }
+      window[callbackName] = function(data) {
+        clearTimeout(timeoutId);
+        delete window[callbackName];
+        document.head.removeChild(script);
+        resolve(data);
+      };
+
+      // 将回调函数名添加到URL
+      const separator = url.includes('?') ? '&' : '?';
+      script.src = url + separator + 'callback=' + callbackName;
+      script.onerror = () => {
+        clearTimeout(timeoutId);
+        delete window[callbackName];
+        document.head.removeChild(script);
+        reject(new Error('JSONP请求失败'));
+      };
+      document.head.appendChild(script);
+    });
   }
 
   // =============================================================
@@ -190,8 +111,8 @@ window.ApiProxy = (function() {
   // =============================================================
 
   /**
-   * 获取汇率数据（免费API，支持CORS）
-   * 数据源: https://open.er-api.com
+   * 获取汇率数据
+   * 源: open.er-api.com (免费，CORS支持)
    */
   async function fetchExchangeRates() {
     const cacheKey = 'exchange_rates';
@@ -199,33 +120,30 @@ window.ApiProxy = (function() {
     if (cached) return cached;
 
     try {
-      const data = await fetch('https://open.er-api.com/v6/latest/USD');
-      const json = await data.json();
+      const resp = await fetchWithTimeout('https://open.er-api.com/v6/latest/USD');
+      const json = await resp.json();
+      
+      if (json.result !== 'success') {
+        throw new Error('汇率API返回失败');
+      }
+
       const rates = {
         USD_CNY: json.rates?.CNY || 7.24,
         USD_HKD: json.rates?.HKD || 7.78,
         USD_JPY: json.rates?.JPY || 157,
         EUR_USD: 1 / json.rates?.EUR || 1.08,
         GBP_USD: 1 / json.rates?.GBP || 1.27,
-        last_updated: json.time_last_update_utc || new Date().toISOString()
+        AUD_USD: 1 / json.rates?.AUD || 0.72,
+        last_updated: json.time_last_update_utc || new Date().toISOString(),
+        source: 'exchangerate-api.com'
       };
+      
       setCache(cacheKey, rates);
       return rates;
     } catch (e) {
-      console.warn('汇率获取失败，使用fallback:', e);
-      return getFallbackExchangeRates();
+      console.error('汇率获取失败:', e);
+      return null; // 不再返回fallback，返回null由调用方处理
     }
-  }
-
-  function getFallbackExchangeRates() {
-    return {
-      USD_CNY: 7.24,
-      USD_HKD: 7.78,
-      USD_JPY: 157,
-      EUR_USD: 1.08,
-      GBP_USD: 1.27,
-      last_updated: 'fallback数据'
-    };
   }
 
   // =============================================================
@@ -234,7 +152,8 @@ window.ApiProxy = (function() {
 
   /**
    * 获取黄金价格（USD/盎司）
-   * 使用Yahoo Finance通过CORS代理
+   * 源: 腾讯财经 qt.gtimg.cn (纽约黄金期货 hf_GC)
+   * 返回格式: v_hf_GC="价格,涨跌,昨收,今开,最高,最低,时间,..."
    */
   async function fetchGoldPriceUSD() {
     const cacheKey = 'gold_usd';
@@ -242,53 +161,50 @@ window.ApiProxy = (function() {
     if (cached) return cached;
 
     try {
-      // Yahoo Finance 黄金期货GC=F
-      const yahooUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/GC=F?interval=1d&range=5d';
-      const proxyUrl = getCurrentProxy() + encodeURIComponent(yahooUrl);
-      
-      const resp = await fetchWithTimeout(proxyUrl, {}, 15000);
+      // 腾讯财经黄金期货（美元/盎司）
+      const resp = await fetchWithTimeout('https://qt.gtimg.cn/q=hf_GC', {
+        headers: { 'Accept': 'text/plain' }
+      });
       const text = await resp.text();
-      const json = JSON.parse(text);
       
-      const result = json?.chart?.result?.[0];
-      if (!result) throw new Error('无数据');
+      // 解析腾讯数据: v_hf_GC="4527.24,-1.43,..."
+      const match = text.match(/v_hf_GC="([^"]+)"/);
+      if (!match) throw new Error('无法解析黄金数据');
 
-      const meta = result.meta;
-      const price = meta.regularMarketPrice || meta.previousClose;
-      
-      // 计算涨跌幅
-      const prevClose = meta.previousClose || price;
-      const change = price - prevClose;
-      const changePct = (change / prevClose) * 100;
+      const fields = match[1].split(',');
+      const price = parseFloat(fields[0]);
+      const change = parseFloat(fields[1]);
+      const prevClose = parseFloat(fields[2]);
+      const high = parseFloat(fields[4]);
+      const low = parseFloat(fields[5]);
+      const updateTime = fields[6] + ' ' + fields[12];
 
-      // 尝试获取200日均线（从历史数据计算）
-      const timestamps = result.timestamp || [];
-      const closes = result.indicators?.quote?.[0]?.close || [];
-      
-      let ma200 = null;
-      if (closes.length >= 200) {
-        const last200 = closes.slice(-200).filter(v => v != null);
-        if (last200.length > 0) {
-          ma200 = last200.reduce((a, b) => a + b, 0) / last200.length;
-        }
-      }
+      if (isNaN(price)) throw new Error('价格无效');
+
+      const changePct = prevClose > 0 ? (change / prevClose) * 100 : 0;
+
+      // 估算MA200（基于近期波动，这里简化处理）
+      const ma200 = price * 0.96; // 简化估算，实际应从历史数据计算
 
       const data = {
         price: price,
         prevClose: prevClose,
         change: change,
         changePct: changePct,
-        ma200: ma200 || price * 0.95, // fallback估算
+        high: high,
+        low: low,
+        ma200: ma200,
         currency: 'USD',
         unit: 'oz',
-        lastUpdated: new Date().toISOString()
+        lastUpdated: updateTime,
+        source: '腾讯财经'
       };
-      
+
       setCache(cacheKey, data);
       return data;
     } catch (e) {
-      console.warn('黄金USD价格获取失败:', e);
-      return getFallbackGoldUSD();
+      console.error('黄金USD价格获取失败:', e);
+      return null;
     }
   }
 
@@ -301,13 +217,16 @@ window.ApiProxy = (function() {
     if (cached) return cached;
 
     try {
-      // 获取USD价格和汇率
       const [goldUSD, rates] = await Promise.all([
         fetchGoldPriceUSD(),
         fetchExchangeRates()
       ]);
 
-      // 转换：USD/盎司 -> CNY/克
+      if (!goldUSD || !rates) {
+        return null;
+      }
+
+      // 转换: USD/盎司 -> CNY/克
       // 1盎司 = 31.1035克
       const pricePerOz = goldUSD.price;
       const pricePerGramUSD = pricePerOz / 31.1035;
@@ -318,36 +237,16 @@ window.ApiProxy = (function() {
         changePct: goldUSD.changePct,
         currency: 'CNY',
         unit: 'gram',
-        lastUpdated: goldUSD.lastUpdated
+        lastUpdated: goldUSD.lastUpdated,
+        source: '腾讯财经/汇率换算'
       };
 
       setCache(cacheKey, data);
       return data;
     } catch (e) {
-      console.warn('黄金CNY价格获取失败:', e);
-      return getFallbackGoldCNY();
+      console.error('黄金CNY价格获取失败:', e);
+      return null;
     }
-  }
-
-  function getFallbackGoldUSD() {
-    return {
-      price: 2320,
-      prevClose: 2310,
-      change: 10,
-      changePct: 0.43,
-      ma200: 2180,
-      currency: 'USD',
-      unit: 'oz'
-    };
-  }
-
-  function getFallbackGoldCNY() {
-    return {
-      price: 548,
-      changePct: 0.43,
-      currency: 'CNY',
-      unit: 'gram'
-    };
   }
 
   // =============================================================
@@ -356,103 +255,216 @@ window.ApiProxy = (function() {
 
   /**
    * 获取市场指数数据
+   * 源: 腾讯财经/新浪财经
    */
   async function fetchMarketIndices() {
     const cacheKey = 'market_indices';
     const cached = getCache(cacheKey);
     if (cached) return cached;
 
-    // 市场指数列表
-    const indices = [
-      { symbol: 'DX-Y.NYB', name: '美元指数', description: 'DXY' },
-      { symbol: '^TNX', name: '10Y美债收益率', description: '10-Year Treasury' },
-      { symbol: '^VIX', name: 'VIX恐慌指数', description: 'Volatility Index' },
-      { symbol: 'BTC-USD', name: '比特币', description: 'Bitcoin' }
-    ];
+    const indices = [];
 
     try {
-      const results = await Promise.all(
-        indices.map(async (idx) => {
-          try {
-            const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${idx.symbol}?interval=1d&range=2d`;
-            const proxyUrl = getCurrentProxy() + encodeURIComponent(yahooUrl);
-            
-            const resp = await fetchWithTimeout(proxyUrl, {}, 10000);
-            const text = await resp.text();
-            const json = JSON.parse(text);
-            
-            const result = json?.chart?.result?.[0];
-            if (!result) return getFallbackIndex(idx);
-            
-            const meta = result.meta;
-            const price = meta.regularMarketPrice;
-            const prevClose = meta.previousClose || price;
-            const change = price - prevClose;
-            const changePct = (change / prevClose) * 100;
+      // 并行获取多个指数
+      const promises = [
+        // A股指数（新浪）
+        fetchSinaIndex('sh000001', '上证指数', '上证综指'),
+        fetchSinaIndex('sh000300', '沪深300', '沪深300'),
+        // 港股指数（新浪）
+        fetchSinaHKIndex('rt_hkHSI', '恒生指数', '恒生指数'),
+        // 美股指数（腾讯）
+        fetchTencentUSIndex('usINX', '标普500', 'S&P 500'),
+        // 原油期货（腾讯）
+        fetchTencentFuture('hf_CL', 'WTI原油', '纽约原油'),
+        // 白银期货（腾讯）
+        fetchTencentFuture('hf_SI', '纽约白银', '纽约白银')
+      ];
 
-            // 获取近期数据用于迷你图
-            const closes = result.indicators?.quote?.[0]?.close?.filter(v => v != null) || [];
-            const sparkline = closes.slice(-10);
+      const results = await Promise.allSettled(promises);
+      
+      results.forEach(result => {
+        if (result.status === 'fulfilled' && result.value) {
+          indices.push(result.value);
+        }
+      });
 
-            return {
-              symbol: idx.symbol,
-              name: idx.name,
-              description: idx.description,
-              price: price,
-              change: change,
-              changePct: changePct,
-              trend: changePct >= 0 ? 'up' : 'down',
-              sparkline: sparkline
-            };
-          } catch (e) {
-            return getFallbackIndex(idx);
-          }
-        })
-      );
+      if (indices.length === 0) {
+        throw new Error('所有指数获取失败');
+      }
 
       const data = {
-        items: results,
+        items: indices,
         updated_at: new Date().toISOString()
       };
 
       setCache(cacheKey, data);
       return data;
     } catch (e) {
-      console.warn('市场指数获取失败:', e);
-      return getFallbackMarketIndices();
+      console.error('市场指数获取失败:', e);
+      return null;
     }
   }
 
-  function getFallbackIndex(idx) {
-    const fallbacks = {
-      'DX-Y.NYB': { price: 104.5, changePct: 0.12 },
-      '^TNX': { price: 4.52, changePct: -0.03 },
-      '^VIX': { price: 14.5, changePct: -1.2 },
-      'BTC-USD': { price: 68500, changePct: 1.8 }
-    };
-    const fb = fallbacks[idx.symbol] || { price: 100, changePct: 0 };
-    return {
-      symbol: idx.symbol,
-      name: idx.name,
-      description: idx.description,
-      price: fb.price,
-      change: fb.price * fb.changePct / 100,
-      changePct: fb.changePct,
-      trend: fb.changePct >= 0 ? 'up' : 'down',
-      sparkline: []
-    };
+  /**
+   * 获取新浪A股指数
+   */
+  async function fetchSinaIndex(code, name, description) {
+    try {
+      const resp = await fetchWithTimeout(
+        `https://hq.sinajs.cn/list=${code}`,
+        { headers: { 'Referer': 'https://finance.sina.com.cn' } }
+      );
+      const buffer = await resp.arrayBuffer();
+      const decoder = new TextDecoder('GBK');
+      const text = decoder.decode(buffer);
+      
+      // 格式: var hq_str_sh000001="上证指数,今开,昨收,当前,最高,最低,..."
+      const match = text.match(/hq_str_\w+="([^"]+)"/);
+      if (!match) return null;
+
+      const fields = match[1].split(',');
+      const price = parseFloat(fields[3]);
+      const prevClose = parseFloat(fields[2]);
+      const high = parseFloat(fields[4]);
+      const low = parseFloat(fields[5]);
+      const change = price - prevClose;
+      const changePct = prevClose > 0 ? (change / prevClose) * 100 : 0;
+
+      return {
+        symbol: code,
+        name: name,
+        description: description,
+        price: price,
+        change: change,
+        changePct: changePct,
+        high: high,
+        low: low,
+        trend: changePct >= 0 ? 'up' : 'down',
+        updateTime: fields[30] + ' ' + fields[31],
+        source: '新浪财经'
+      };
+    } catch (e) {
+      console.warn(`${name}获取失败:`, e);
+      return null;
+    }
   }
 
-  function getFallbackMarketIndices() {
-    return {
-      items: [
-        { symbol: 'DX-Y.NYB', name: '美元指数', price: 104.5, changePct: 0.12, trend: 'up', sparkline: [] },
-        { symbol: '^TNX', name: '10Y美债收益率', price: 4.52, changePct: -0.03, trend: 'down', sparkline: [] },
-        { symbol: '^VIX', name: 'VIX恐慌指数', price: 14.5, changePct: -1.2, trend: 'down', sparkline: [] },
-        { symbol: 'BTC-USD', name: '比特币', price: 68500, changePct: 1.8, trend: 'up', sparkline: [] }
-      ],
-      updated_at: new Date().toISOString()
-    };
+  /**
+   * 获取新浪港股指数
+   */
+  async function fetchSinaHKIndex(code, name, description) {
+    try {
+      const resp = await fetchWithTimeout(
+        `https://hq.sinajs.cn/list=${code}`,
+        { headers: { 'Referer': 'https://finance.sina.com.cn' } }
+      );
+      const buffer = await resp.arrayBuffer();
+      const decoder = new TextDecoder('GBK');
+      const text = decoder.decode(buffer);
+      
+      // 格式: var hq_str_rt_hkHSI="HSI,恒生指数,当前,昨收,今开,最高,最低,时间,..."
+      const match = text.match(/hq_str_\w+="([^"]+)"/);
+      if (!match) return null;
+
+      const fields = match[1].split(',');
+      const price = parseFloat(fields[2]);
+      const prevClose = parseFloat(fields[3]);
+      const high = parseFloat(fields[5]);
+      const low = parseFloat(fields[6]);
+      const change = price - prevClose;
+      const changePct = prevClose > 0 ? (change / prevClose) * 100 : 0;
+
+      return {
+        symbol: code,
+        name: name,
+        description: description,
+        price: price,
+        change: change,
+        changePct: changePct,
+        high: high,
+        low: low,
+        trend: changePct >= 0 ? 'up' : 'down',
+        updateTime: fields[17] + ' ' + fields[18],
+        source: '新浪财经'
+      };
+    } catch (e) {
+      console.warn(`${name}获取失败:`, e);
+      return null;
+    }
+  }
+
+  /**
+   * 获取腾讯美股指数
+   */
+  async function fetchTencentUSIndex(code, name, description) {
+    try {
+      const resp = await fetchWithTimeout('https://qt.gtimg.cn/q=' + code);
+      const buffer = await resp.arrayBuffer();
+      const decoder = new TextDecoder('GBK');
+      const text = decoder.decode(buffer);
+      
+      // 格式: v_usINX="200~名称~代码~当前~昨收~今开~..."
+      const match = text.match(/v_\w+="([^"]+)"/);
+      if (!match) return null;
+
+      const fields = match[1].split('~');
+      const price = parseFloat(fields[3]);
+      const prevClose = parseFloat(fields[4]);
+      const change = price - prevClose;
+      const changePct = prevClose > 0 ? (change / prevClose) * 100 : 0;
+
+      return {
+        symbol: code,
+        name: name,
+        description: description,
+        price: price,
+        change: change,
+        changePct: changePct,
+        trend: changePct >= 0 ? 'up' : 'down',
+        updateTime: fields[30],
+        source: '腾讯财经'
+      };
+    } catch (e) {
+      console.warn(`${name}获取失败:`, e);
+      return null;
+    }
+  }
+
+  /**
+   * 获取腾讯期货数据
+   */
+  async function fetchTencentFuture(code, name, description) {
+    try {
+      const resp = await fetchWithTimeout('https://qt.gtimg.cn/q=' + code);
+      const buffer = await resp.arrayBuffer();
+      const decoder = new TextDecoder('GBK');
+      const text = decoder.decode(buffer);
+      
+      // 格式: v_hf_CL="价格,涨跌,昨收,今开,最高,最低,时间,..."
+      const match = text.match(/v_\w+="([^"]+)"/);
+      if (!match) return null;
+
+      const fields = match[1].split(',');
+      const price = parseFloat(fields[0]);
+      const change = parseFloat(fields[1]);
+      const prevClose = parseFloat(fields[2]);
+      const changePct = prevClose > 0 ? (change / prevClose) * 100 : 0;
+
+      return {
+        symbol: code,
+        name: name,
+        description: description,
+        price: price,
+        change: change,
+        changePct: changePct,
+        trend: changePct >= 0 ? 'up' : 'down',
+        updateTime: fields[6] + ' ' + fields[12],
+        source: '腾讯财经'
+      };
+    } catch (e) {
+      console.warn(`${name}获取失败:`, e);
+      return null;
+    }
   }
 
   // =============================================================
@@ -461,7 +473,8 @@ window.ApiProxy = (function() {
 
   /**
    * 获取宏观指标数据
-   * 使用预置数据 + 汇率作为主要数据源
+   * 注：CPI/PMI等月度数据需要手动更新，这里返回实时市场数据
+   * 真实宏观数据请参考: 国家统计局、中国人民银行、美联储等官方发布
    */
   async function fetchMacroData() {
     const cacheKey = 'macro_data';
@@ -469,208 +482,56 @@ window.ApiProxy = (function() {
     if (cached) return cached;
 
     try {
-      // 并行获取汇率和黄金数据
-      const [rates, goldUSD] = await Promise.all([
+      const [rates, goldUSD, indices] = await Promise.all([
         fetchExchangeRates(),
-        fetchGoldPriceUSD()
+        fetchGoldPriceUSD(),
+        fetchMarketIndices()
       ]);
 
-      // 构建宏观数据（大部分使用预置参考值+实时汇率）
+      // 构建宏观数据（实时市场指标）
       const data = {
         china: {
-          cpi: {
-            name: 'CPI同比',
-            value: '2.5',
-            unit: '%',
-            period: '2026年5月（参考）',
-            trend: 'up',
-            change: '+0.2%',
-            alert: false,
-            source: '中国国家统计局'
-          },
-          ppi: {
-            name: 'PPI同比',
-            value: '-2.1',
-            unit: '%',
-            period: '2026年5月（参考）',
-            trend: 'down',
-            change: '-0.3%',
-            alert: true,
-            source: '中国国家统计局'
-          },
-          pmi: {
-            name: '官方PMI',
-            value: '49.8',
-            unit: '',
-            period: '2026年5月',
-            trend: 'down',
-            change: '-0.5',
-            alert: true,
-            source: '中国物流与采购联合会'
-          },
-          m2: {
-            name: 'M2货币供应',
-            value: '310.2',
-            unit: '万亿元',
-            period: '2026年5月',
-            trend: 'up',
-            change: '+8.1%',
-            alert: false,
-            source: '中国人民银行'
-          },
-          lpr: {
-            name: 'LPR 1年期',
-            value: '3.45',
-            unit: '%',
-            period: '2026年6月',
-            trend: 'down',
-            change: '-0.05%',
-            alert: false,
-            source: '中国人民银行'
-          }
+          cpi: null,   // 月度数据，需手动更新
+          ppi: null,
+          pmi: null,
+          m2: null,
+          lpr: null
         },
         us: {
-          cpi: {
-            name: 'CPI同比',
-            value: '3.2',
-            unit: '%',
-            period: '2026年5月（参考）',
-            trend: 'up',
-            change: '+0.1%',
-            alert: true,
-            source: '美国劳工统计局'
-          },
-          pce: {
-            name: 'PCE物价指数',
-            value: '2.8',
-            unit: '%',
-            period: '2026年4月',
-            trend: 'down',
-            change: '-0.1%',
-            alert: false,
-            source: '美联储'
-          },
-          nfp: {
-            name: '非农就业',
-            value: '+185',
-            unit: '千人',
-            period: '2026年5月',
-            trend: 'up',
-            change: '好于预期',
-            alert: false,
-            source: '美国劳工统计局'
-          },
-          unemployment: {
-            name: '失业率',
-            value: '4.0',
-            unit: '%',
-            period: '2026年5月',
-            trend: 'up',
-            change: '+0.1%',
-            alert: false,
-            source: '美国劳工统计局'
-          },
-          fed_rate: {
-            name: '联邦基金利率',
-            value: '5.25',
-            unit: '%',
-            period: '2026年6月（预期）',
-            trend: 'flat',
-            change: '维持不变',
-            alert: false,
-            source: 'CME FedWatch'
-          }
+          cpi: null,   // 月度数据，需手动更新
+          pce: null,
+          nfp: null,
+          unemployment: null,
+          fed_rate: null
         },
         global: {
-          dxy: {
-            name: '美元指数',
-            value: rates.USD_CNY * 14.5, // 估算
-            unit: '',
-            period: '实时',
-            trend: rates.USD_CNY > 7.2 ? 'up' : 'down',
-            change: null,
-            alert: false,
-            source: 'Yahoo Finance'
-          },
-          us10y: {
-            name: '10Y美债收益率',
-            value: '4.52',
-            unit: '%',
-            period: '实时',
-            trend: 'down',
-            change: '-3bp',
-            alert: false,
-            source: 'Yahoo Finance'
-          },
-          vix: {
-            name: 'VIX恐慌指数',
-            value: '14.5',
-            unit: '',
-            period: '实时',
-            trend: 'down',
-            change: '-1.2',
-            alert: false,
-            source: 'CBOE'
-          },
-          brent: {
-            name: '布伦特原油',
-            value: '82.5',
-            unit: 'USD/桶',
-            period: '实时',
-            trend: 'up',
-            change: '+0.8%',
-            alert: false,
-            source: 'Yahoo Finance'
-          },
-          gold: {
+          dxy: null,   // 美元指数（暂无直接接口）
+          us10y: null, // 美债收益率（暂无直接接口）
+          vix: null,   // VIX恐慌指数（暂无直接接口）
+          brent: null, // 布伦特原油
+          gold: goldUSD ? {
             name: '现货黄金',
             value: goldUSD.price.toFixed(2),
             unit: 'USD/oz',
-            period: '实时',
+            period: goldUSD.lastUpdated,
             trend: goldUSD.changePct >= 0 ? 'up' : 'down',
             change: (goldUSD.changePct >= 0 ? '+' : '') + goldUSD.changePct.toFixed(2) + '%',
-            alert: false,
-            source: 'Yahoo Finance'
-          }
+            source: goldUSD.source
+          } : null,
+          crude: indices?.items?.find(i => i.name === 'WTI原油') || null
         },
         exchange_rates: rates,
-        updated_at: new Date().toISOString()
+        market_indices: indices,
+        updated_at: new Date().toISOString(),
+        note: '宏观指标（CPI/PMI等）为月度数据，请参考官方发布'
       };
 
       setCache(cacheKey, data);
       return data;
     } catch (e) {
-      console.warn('宏观数据获取失败:', e);
-      return getFallbackMacroData();
+      console.error('宏观数据获取失败:', e);
+      return null;
     }
-  }
-
-  function getFallbackMacroData() {
-    return {
-      china: {
-        cpi: { name: 'CPI同比', value: '2.5', unit: '%', period: '参考数据', trend: 'up', source: 'fallback' },
-        ppi: { name: 'PPI同比', value: '-2.1', unit: '%', period: '参考数据', trend: 'down', source: 'fallback' },
-        pmi: { name: '官方PMI', value: '49.8', unit: '', period: '参考数据', trend: 'down', alert: true, source: 'fallback' },
-        m2: { name: 'M2货币供应', value: '310.2', unit: '万亿元', period: '参考数据', trend: 'up', source: 'fallback' },
-        lpr: { name: 'LPR 1年期', value: '3.45', unit: '%', period: '参考数据', trend: 'down', source: 'fallback' }
-      },
-      us: {
-        cpi: { name: 'CPI同比', value: '3.2', unit: '%', period: '参考数据', trend: 'up', alert: true, source: 'fallback' },
-        pce: { name: 'PCE物价指数', value: '2.8', unit: '%', period: '参考数据', trend: 'down', source: 'fallback' },
-        nfp: { name: '非农就业', value: '+185', unit: '千人', period: '参考数据', trend: 'up', source: 'fallback' },
-        unemployment: { name: '失业率', value: '4.0', unit: '%', period: '参考数据', trend: 'up', source: 'fallback' },
-        fed_rate: { name: '联邦基金利率', value: '5.25', unit: '%', period: '参考数据', trend: 'flat', source: 'fallback' }
-      },
-      global: {
-        dxy: { name: '美元指数', value: '104.5', unit: '', period: '参考数据', trend: 'up', source: 'fallback' },
-        us10y: { name: '10Y美债收益率', value: '4.52', unit: '%', period: '参考数据', trend: 'down', source: 'fallback' },
-        vix: { name: 'VIX恐慌指数', value: '14.5', unit: '', period: '参考数据', trend: 'down', source: 'fallback' },
-        brent: { name: '布伦特原油', value: '82.5', unit: 'USD/桶', period: '参考数据', trend: 'up', source: 'fallback' },
-        gold: { name: '现货黄金', value: '2320', unit: 'USD/oz', period: '参考数据', trend: 'up', source: 'fallback' }
-      },
-      exchange_rates: getFallbackExchangeRates(),
-      updated_at: new Date().toISOString()
-    };
   }
 
   // =============================================================
@@ -679,21 +540,16 @@ window.ApiProxy = (function() {
   return {
     // 汇率
     fetchExchangeRates,
-    getFallbackExchangeRates,
     
     // 黄金
     fetchGoldPriceUSD,
     fetchGoldPriceCNY,
-    getFallbackGoldUSD,
-    getFallbackGoldCNY,
     
     // 市场指数
     fetchMarketIndices,
-    getFallbackMarketIndices,
     
     // 宏观数据
     fetchMacroData,
-    getFallbackMacroData,
     
     // 工具
     getCache,
