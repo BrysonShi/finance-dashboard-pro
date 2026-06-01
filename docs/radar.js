@@ -156,7 +156,7 @@ window.RadarModule = (function() {
       let action = '正常经济环境';
       if (ratio > 30) { level = 'high'; value = 80; action = '危机预警，关注黄金'; }
       else if (ratio > 25) { level = 'medium'; value = 55; action = '保持关注'; }
-      risks.push({ label: '金油比', level, value, desc, action, benchmark: '正常区间15-25' });
+      risks.push({ label: '金油比', level, value, desc: `${ratio.toFixed(1)} ${desc}`, action, benchmark: '正常15-25' });
     }
 
     return risks;
@@ -336,7 +336,7 @@ window.RadarModule = (function() {
         <span class="risk-value" style="color:${color}">${levelLabels[risk.level] || '—'}</span>
       </div>
       <div class="risk-desc">${risk.desc}${risk.benchmark ? ` · ${risk.benchmark}` : ''}</div>
-      ${risk.action ? `<div class="risk-action">💡 ${risk.action}</div>` : ''}
+      ${risk.action ? `<div class="risk-action">💡${risk.action}</div>` : ''}
     `;
   }
 
