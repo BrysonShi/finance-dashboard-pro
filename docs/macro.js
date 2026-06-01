@@ -1,6 +1,7 @@
 /**
  * =============================================================
- * 宏观数据模块 - 核心驱动指标展示
+ * 宏观数据模块 V3 - 核心驱动指标展示
+ * 从 data/macro-data.json 读取宏观数据
  * =============================================================
  */
 window.MacroModule = (function() {
@@ -16,11 +17,31 @@ window.MacroModule = (function() {
     return trend === 'up' ? '↑' : trend === 'down' ? '↓' : '→';
   }
 
+  // 黄金关系说明
+  const GOLD_RELATIONS = {
+    tips_5y: { text: 'TIPS↑ → 黄金↓（负相关，黄金定价核心锚）', direction: 'inverse' },
+    us10y: { text: '美债↑ → 黄金承压（机会成本上升）', direction: 'inverse' },
+    dxy: { text: 'DXY↑ → 黄金↓（负相关，美元走强压制）', direction: 'inverse' },
+    cpi_cn: { text: 'CPI↑ → 黄金↑（通胀避险需求）', direction: 'positive' },
+    ppi_cn: { text: 'PPI↑ → 工业需求回暖，间接利好黄金', direction: 'positive' },
+    pmi_mfg: { text: 'PMI>50 → 经济扩张，利好黄金需求', direction: 'positive' },
+    m2_growth: { text: 'M2↑ → 货币宽松，黄金受益', direction: 'positive' },
+    lpr_1y: { text: 'LPR↓ → 宽松信号，利好黄金', direction: 'positive' },
+    cpi_us: { text: 'CPI↑ → 黄金↑（抗通胀需求）', direction: 'positive' },
+    pce: { text: 'PCE↑ → Fed加息预期，黄金承压', direction: 'inverse' },
+    nonfarm: { text: '非农↑ → 经济强劲，黄金吸引力下降', direction: 'inverse' },
+    unemployment: { text: '失业率↑ → 经济疲弱，避险需求上升', direction: 'positive' },
+    fed_rate: { text: 'Fed加息↑ → 黄金承压（机会成本）', direction: 'inverse' },
+    brent: { text: '油价↑ → 通胀预期上升，黄金受益', direction: 'positive' },
+    vix: { text: 'VIX↑ → 恐慌情绪，避险买盘增加', direction: 'positive' },
+    gold: { text: '黄金为最终避险资产', direction: 'neutral' }
+  };
+
   // =============================================================
   // 渲染函数
   // =============================================================
 
-  function renderIndicator(ind) {
+  function renderIndicator(ind, key) {
     if (!ind) {
       return `<div class="indicator-card">
         <div class="name">—</div>
@@ -37,17 +58,21 @@ window.MacroModule = (function() {
       changeStr = `<div class="change ${ind.change_pct >= 0 ? 'up' : 'down'}">${ind.change_pct >= 0 ? '+' : ''}${ind.change_pct.toFixed(2)}%</div>`;
     }
 
+    const goldRelation = GOLD_RELATIONS[key]?.text || '';
+    const goldRelationHtml = goldRelation ? `<div class="gold-relation">📌 ${goldRelation}</div>` : '';
+
     return `<div class="indicator-card ${alertClass}">
       ${alertBadge}
       <div class="name">${ind.name || '—'}</div>
       <div class="value">${ind.value || '—'}<span class="unit">${ind.unit || ''}</span></div>
       ${changeStr}
-      <div class="period">${ind.period || ''}</div>
+      <div class="period">${ind.period || ''} ${ind.source ? '· ' + ind.source : ''}</div>
+      ${goldRelationHtml}
     </div>`;
   }
 
   /**
-   * 渲染核心驱动指标
+   * 渲染核心驱动指标 - V3版本
    */
   function renderCoreDrivers(data) {
     const container = document.getElementById('coreDrivers');
@@ -55,54 +80,242 @@ window.MacroModule = (function() {
 
     const items = [];
 
-    // 5年期TIPS实际利率（最重要，放最前面）
-    items.push({
-      name: '5Y TIPS实际利率',
-      value: data.tips?.value || '—',
-      unit: '%',
-      period: data.tips?.period || '',
-      change_pct: data.tips?.change,
-      alert: data.tips?.value > 2,
-      note: 'TIPS↑ → 黄金↓（负相关）'
-    });
+    // 从macro-data.json读取数据
+    const macro = data.macroData || {};
+
+    // 5年期TIPS实际利率（最重要）
+    if (macro.global?.tips_5y) {
+      const tips = macro.global.tips_5y;
+      items.push({
+        key: 'tips_5y',
+        data: {
+          name: '5Y TIPS实际利率',
+          value: tips.value,
+          unit: tips.unit,
+          period: tips.period,
+          source: tips.source,
+          alert: parseFloat(tips.value) > 2
+        }
+      });
+    }
 
     // 10年期美债收益率
-    items.push({
-      name: '10Y美债收益率',
-      value: data.us10y?.value || '—',
-      unit: '%',
-      period: data.us10y?.period || '',
-      change_pct: data.us10y?.change,
-      alert: data.us10y?.value > 4.5,
-      note: '美债↑ → 黄金承压'
-    });
+    if (macro.global?.us10y) {
+      const us10y = macro.global.us10y;
+      items.push({
+        key: 'us10y',
+        data: {
+          name: '10Y美债收益率',
+          value: us10y.value,
+          unit: us10y.unit,
+          period: us10y.period,
+          source: us10y.source,
+          alert: parseFloat(us10y.value) > 4.5
+        }
+      });
+    }
 
     // 美元指数
-    const dxy = data.marketIndices?.items?.find(i => i.name === '美元指数');
-    if (dxy) {
+    if (macro.global?.dxy) {
+      const dxy = macro.global.dxy;
       items.push({
-        name: '美元指数 DXY',
-        value: dxy.price?.toFixed(2) || '—',
-        unit: '',
-        period: dxy.source || '',
-        change_pct: dxy.changePct,
-        note: 'DXY↑ → 黄金↓（负相关）'
+        key: 'dxy',
+        data: {
+          name: '美元指数 DXY',
+          value: dxy.value,
+          unit: dxy.unit,
+          period: dxy.period,
+          source: dxy.source,
+          alert: parseFloat(dxy.value) > 105
+        }
       });
     }
 
-    // 黄金
-    if (data.goldUSD) {
+    // 中国CPI
+    if (macro.china?.cpi) {
+      const cpi = macro.china.cpi;
       items.push({
-        name: '现货黄金',
-        value: data.goldUSD.price?.toFixed(2) || '—',
-        unit: 'USD/oz',
-        period: data.goldUSD.lastUpdated || '',
-        change_pct: data.goldUSD.changePct,
-        note: '避险需求定价锚'
+        key: 'cpi_cn',
+        data: {
+          name: '中国CPI',
+          value: cpi.value,
+          unit: cpi.unit,
+          period: cpi.period,
+          source: cpi.source
+        }
       });
     }
 
-    container.innerHTML = items.map(renderIndicator).join('');
+    // 中国PPI
+    if (macro.china?.ppi) {
+      const ppi = macro.china.ppi;
+      items.push({
+        key: 'ppi_cn',
+        data: {
+          name: '中国PPI',
+          value: ppi.value,
+          unit: ppi.unit,
+          period: ppi.period,
+          source: ppi.source
+        }
+      });
+    }
+
+    // 中国PMI
+    if (macro.china?.pmi_mfg) {
+      const pmi = macro.china.pmi_mfg;
+      items.push({
+        key: 'pmi_mfg',
+        data: {
+          name: '中国制造业PMI',
+          value: pmi.value,
+          unit: pmi.unit,
+          period: pmi.period,
+          source: pmi.source,
+          alert: parseFloat(pmi.value) < 50
+        }
+      });
+    }
+
+    // M2增速
+    if (macro.china?.m2_growth) {
+      const m2 = macro.china.m2_growth;
+      items.push({
+        key: 'm2_growth',
+        data: {
+          name: '中国M2增速',
+          value: m2.value,
+          unit: m2.unit,
+          period: m2.period,
+          source: m2.source
+        }
+      });
+    }
+
+    // LPR
+    if (macro.china?.lpr_1y) {
+      const lpr = macro.china.lpr_1y;
+      items.push({
+        key: 'lpr_1y',
+        data: {
+          name: '1年期LPR',
+          value: lpr.value,
+          unit: lpr.unit,
+          period: lpr.period,
+          source: lpr.source
+        }
+      });
+    }
+
+    // 美国CPI
+    if (macro.us?.cpi) {
+      const cpi = macro.us.cpi;
+      items.push({
+        key: 'cpi_us',
+        data: {
+          name: '美国CPI',
+          value: cpi.value,
+          unit: cpi.unit,
+          period: cpi.period,
+          source: cpi.source,
+          alert: parseFloat(cpi.value) > 3.5
+        }
+      });
+    }
+
+    // 核心PCE
+    if (macro.us?.core_pce) {
+      const pce = macro.us.core_pce;
+      items.push({
+        key: 'pce',
+        data: {
+          name: '美国核心PCE',
+          value: pce.value,
+          unit: pce.unit,
+          period: pce.period,
+          source: pce.source,
+          alert: parseFloat(pce.value) > 2.5
+        }
+      });
+    }
+
+    // 非农就业
+    if (macro.us?.nonfarm) {
+      const nonfarm = macro.us.nonfarm;
+      items.push({
+        key: 'nonfarm',
+        data: {
+          name: '美国非农就业',
+          value: nonfarm.value,
+          unit: nonfarm.unit,
+          period: nonfarm.period,
+          source: nonfarm.source
+        }
+      });
+    }
+
+    // 失业率
+    if (macro.us?.unemployment) {
+      const ur = macro.us.unemployment;
+      items.push({
+        key: 'unemployment',
+        data: {
+          name: '美国失业率',
+          value: ur.value,
+          unit: ur.unit,
+          period: ur.period,
+          source: ur.source
+        }
+      });
+    }
+
+    // Fed利率
+    if (macro.us?.fed_rate) {
+      const fed = macro.us.fed_rate;
+      items.push({
+        key: 'fed_rate',
+        data: {
+          name: '美联储联邦基金利率',
+          value: fed.value,
+          unit: fed.unit,
+          period: fed.period,
+          source: fed.source
+        }
+      });
+    }
+
+    // 布伦特原油
+    if (macro.global?.brent) {
+      const brent = macro.global.brent;
+      items.push({
+        key: 'brent',
+        data: {
+          name: '布伦特原油',
+          value: brent.value,
+          unit: brent.unit,
+          period: brent.period,
+          source: brent.source
+        }
+      });
+    }
+
+    // VIX
+    if (macro.global?.vix) {
+      const vix = macro.global.vix;
+      items.push({
+        key: 'vix',
+        data: {
+          name: 'VIX恐慌指数',
+          value: vix.value,
+          unit: vix.unit,
+          period: vix.period,
+          source: vix.source,
+          alert: parseFloat(vix.value) > 25
+        }
+      });
+    }
+
+    container.innerHTML = items.map(item => renderIndicator(item.data, item.key)).join('');
   }
 
   /**
@@ -196,7 +409,6 @@ window.MacroModule = (function() {
     const container = document.getElementById('goldETF');
     if (!container) return;
     
-    // ETF数据暂不可用
     container.innerHTML = `
       <div class="indicator-card">
         <div class="name">SPDR黄金ETF (GLD)</div>
@@ -217,13 +429,14 @@ window.MacroModule = (function() {
 
   async function load() {
     try {
-      const [goldUSD, crudeOil, marketIndices, rates, cbData, cftcData] = await Promise.all([
+      const [goldUSD, crudeOil, marketIndices, rates, cbData, cftcData, macroData] = await Promise.all([
         window.ApiProxy.fetchGoldPriceUSD(),
         window.ApiProxy.fetchCrudeOil(),
         window.ApiProxy.fetchMarketIndices(),
         window.ApiProxy.fetchExchangeRates(),
         fetch('data/central-bank-gold.json').then(r => r.json()).catch(() => null),
-        fetch('data/cftc.json').then(r => r.json()).catch(() => null)
+        fetch('data/cftc.json').then(r => r.json()).catch(() => null),
+        fetch('data/macro-data.json').then(r => r.json()).catch(() => null)
       ]);
 
       const data = {
@@ -231,10 +444,11 @@ window.MacroModule = (function() {
         crudeOil,
         marketIndices,
         rates,
-        tips: null, // TIPS数据暂无接口
-        us10y: null, // 美债数据暂无接口
+        tips: macroData?.global?.tips_5y,
+        us10y: macroData?.global?.us10y,
         cbData,
-        cftcData
+        cftcData,
+        macroData
       };
 
       cachedData = data;

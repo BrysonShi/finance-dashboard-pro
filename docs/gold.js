@@ -1,6 +1,6 @@
 /**
  * =============================================================
- * 黄金监控模块 - 黄金决策看板核心
+ * 黄金监控模块 - 黄金决策看板核心 V3
  * 数据来源：腾讯财经 qt.gtimg.cn（黄金期货）+ 汇率换算
  * =============================================================
  */
@@ -24,7 +24,7 @@ window.GoldModule = (function() {
       key: 'ma200_test', 
       name: '金价测试MA200(4360)企稳', 
       description: '现货黄金测试4360美元（200日均线）企稳反弹',
-      autoJudge: true // 可自动判断
+      autoJudge: true
     },
     { 
       key: 'au9999_950', 
@@ -48,7 +48,7 @@ window.GoldModule = (function() {
       key: 'us10y_retreat', 
       name: '美债收益率回落>20bp', 
       description: '10年期美债收益率从高点回落超过20个基点',
-      autoJudge: false // 需人工判断
+      autoJudge: false
     },
     { 
       key: 'dxy_below_98', 
@@ -103,33 +103,31 @@ window.GoldModule = (function() {
    */
   function evaluateSignals(data) {
     const signals = SIGNALS_CONFIG.map(signal => {
-      let status = 'gray'; // 默认：数据不足
+      let status = 'gray';
       let detail = '需实时数据判断';
 
       switch (signal.key) {
         case 'ma200_test':
-          // MA200 ≈ 4360，检查当前价格是否接近
           if (data.goldUSD?.price) {
             const price = data.goldUSD.price;
             if (price >= 4360 && price <= 4450) {
-              status = 'yellow'; // 在MA200附近
+              status = 'yellow';
               detail = `当前$${fmt(price)}，接近MA200`;
             } else if (price > 4450) {
-              status = 'green'; // 在MA200上方企稳
+              status = 'green';
               detail = `当前$${fmt(price)}，高于MA200`;
             } else {
-              status = 'red'; // 跌破MA200
+              status = 'red';
               detail = `当前$${fmt(price)}，低于MA200`;
             }
           }
           break;
 
         case 'au9999_950':
-          // 检查AU9999是否跌破950
           if (data.goldCNY?.price) {
             const price = data.goldCNY.price;
             if (price < 950) {
-              status = 'green'; // 跌破950是买入信号
+              status = 'green';
               detail = `当前¥${fmt(price)}，已跌破950`;
             } else {
               status = 'red';
@@ -139,7 +137,6 @@ window.GoldModule = (function() {
           break;
 
         case 'rsi_oversold_div':
-          // 需要RSI数据，这里标记为待确认
           if (data.indicators?.rsi) {
             const rsi = data.indicators.rsi;
             if (rsi < 30) {
@@ -169,7 +166,6 @@ window.GoldModule = (function() {
           break;
 
         case 'us10y_retreat':
-          // 需人工判断
           status = 'yellow';
           detail = '需查看美债收益率数据';
           break;
@@ -190,25 +186,21 @@ window.GoldModule = (function() {
           break;
 
         case 'fed_dovish':
-          // 需人工判断
           status = 'yellow';
           detail = '需关注FOMC信号';
           break;
 
         case 'geopolitical_calm':
-          // 需人工判断
           status = 'yellow';
           detail = '需观察地缘局势';
           break;
 
         case 'etf_inflow':
-          // 数据难获取
           status = 'yellow';
           detail = 'ETF数据暂不可用';
           break;
 
         case 'cftc_netlong_recover':
-          // 使用内置CFTC数据
           if (data.cftc?.latest) {
             const latest = data.cftc.latest;
             const prev = data.cftc.previous;
@@ -278,7 +270,6 @@ window.GoldModule = (function() {
       comment = '经济过热 (<15)';
     }
     
-    // 计算历史分位数（简化：假设正常区间15-30）
     const percentile = Math.min(Math.max((ratio - 15) / 15 * 50, 0), 100);
     
     return {
@@ -289,6 +280,39 @@ window.GoldModule = (function() {
       gold_price: goldUSD.price,
       oil_price: crudeOil.price
     };
+  }
+
+  /**
+   * 计算加价预警状态
+   */
+  function checkPriceAlert(goldPrice) {
+    const alerts = {
+      support: [],
+      resistance: [],
+      tips: null
+    };
+
+    if (!goldPrice) return alerts;
+
+    // 检查支撑位（2%以内触发预警）
+    const supportLevels = [4360, 4450, 4500];
+    supportLevels.forEach(level => {
+      const diff = Math.abs((goldPrice - level) / level * 100);
+      if (diff <= 2) {
+        alerts.support.push({ level, diff: diff.toFixed(1) });
+      }
+    });
+
+    // 检查阻力位（2%以内触发预警）
+    const resistanceLevels = [4600, 4700];
+    resistanceLevels.forEach(level => {
+      const diff = Math.abs((goldPrice - level) / level * 100);
+      if (diff <= 2) {
+        alerts.resistance.push({ level, diff: diff.toFixed(1) });
+      }
+    });
+
+    return alerts;
   }
 
   // =============================================================
@@ -305,7 +329,6 @@ window.GoldModule = (function() {
     const ctx = canvas.getContext('2d');
     const dpr = window.devicePixelRatio || 1;
     
-    // 设置Canvas尺寸
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
@@ -351,7 +374,6 @@ window.GoldModule = (function() {
       ctx.lineTo(width - padding.right, y);
       ctx.stroke();
       
-      // Y轴标签
       const price = maxPrice - (priceRange / 4) * i;
       ctx.fillStyle = '#5e677a';
       ctx.font = '10px JetBrains Mono';
@@ -426,7 +448,6 @@ window.GoldModule = (function() {
     gradient.addColorStop(0, 'rgba(212, 166, 74, 0.3)');
     gradient.addColorStop(1, 'rgba(212, 166, 74, 0)');
     
-    // 价格线
     data.forEach((d, i) => {
       const x = padding.left + (i / (data.length - 1)) * chartWidth;
       const y = padding.top + chartHeight - ((d.close - minPrice) / priceRange) * chartHeight;
@@ -438,7 +459,6 @@ window.GoldModule = (function() {
       }
     });
 
-    // 闭合面积
     const lastX = padding.left + chartWidth;
     const bottomY = height - padding.bottom;
     ctx.lineTo(lastX, bottomY);
@@ -472,7 +492,6 @@ window.GoldModule = (function() {
     ctx.fillStyle = '#d4a64a';
     ctx.fill();
 
-    // 价格标签
     ctx.fillStyle = '#0a0c10';
     ctx.fillRect(width - padding.right - 5, lastY - 10, 55, 20);
     ctx.strokeStyle = '#d4a64a';
@@ -500,6 +519,95 @@ window.GoldModule = (function() {
   // =============================================================
   // 渲染函数
   // =============================================================
+
+  /**
+   * 渲染大字金价卡片（V3新增）
+   */
+  function renderHeroCards(goldUSD, goldCNY, macroData) {
+    // USD卡片
+    const usdHero = document.getElementById('heroGoldUSD');
+    const usdPriceEl = document.getElementById('heroGoldUsdPrice');
+    const usdChangeEl = document.getElementById('heroGoldUsdChange');
+    const usdTimeEl = document.getElementById('heroGoldUsdTime');
+
+    if (goldUSD && goldUSD.price) {
+      if (usdPriceEl) usdPriceEl.textContent = '$' + fmt(goldUSD.price);
+      if (usdChangeEl) {
+        const pct = goldUSD.changePct || 0;
+        usdChangeEl.textContent = (pct >= 0 ? '↑ +' : '↓ ') + Math.abs(pct).toFixed(2) + '%';
+        usdChangeEl.className = 'hero-card-change ' + (pct >= 0 ? 'up' : 'down');
+      }
+      if (usdTimeEl) usdTimeEl.textContent = '更新: ' + (goldUSD.lastUpdated || new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }));
+
+      // 加价预警检查
+      const alerts = checkPriceAlert(goldUSD.price);
+      if (alerts.support.length > 0) {
+        usdHero.classList.add('alert-support');
+        const alertBadge = document.createElement('div');
+        alertBadge.className = 'hero-card-alert';
+        alertBadge.textContent = '接近支撑 ' + alerts.support[0].level;
+        usdHero.appendChild(alertBadge);
+      } else if (alerts.resistance.length > 0) {
+        usdHero.classList.add('alert-resistance');
+        const alertBadge = document.createElement('div');
+        alertBadge.className = 'hero-card-alert resistance';
+        alertBadge.textContent = '接近阻力 ' + alerts.resistance[0].level;
+        usdHero.appendChild(alertBadge);
+      }
+    } else {
+      if (usdPriceEl) usdPriceEl.textContent = '—';
+      if (usdChangeEl) { usdChangeEl.textContent = '—'; usdChangeEl.className = 'hero-card-change'; }
+      if (usdTimeEl) usdTimeEl.textContent = '加载中...';
+    }
+
+    // CNY卡片
+    const cnyHero = document.getElementById('heroGoldCNY');
+    const cnyPriceEl = document.getElementById('heroGoldCnyPrice');
+    const cnyChangeEl = document.getElementById('heroGoldCnyChange');
+    const cnyTimeEl = document.getElementById('heroGoldCnyTime');
+
+    if (goldCNY && goldCNY.price) {
+      if (cnyPriceEl) cnyPriceEl.textContent = '¥' + fmt(goldCNY.price);
+      if (cnyChangeEl) {
+        const pct = goldCNY.changePct || 0;
+        cnyChangeEl.textContent = (pct >= 0 ? '↑ +' : '↓ ') + Math.abs(pct).toFixed(2) + '%';
+        cnyChangeEl.className = 'hero-card-change ' + (pct >= 0 ? 'up' : 'down');
+      }
+      if (cnyTimeEl) cnyTimeEl.textContent = '更新: ' + new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+    } else {
+      if (cnyPriceEl) cnyPriceEl.textContent = '—';
+      if (cnyChangeEl) { cnyChangeEl.textContent = '—'; cnyChangeEl.className = 'hero-card-change'; }
+      if (cnyTimeEl) cnyTimeEl.textContent = '加载中...';
+    }
+
+    // TIPS卡片
+    const tipsHero = document.getElementById('heroTIPS');
+    const tipsPriceEl = document.getElementById('heroTipsPrice');
+    const tipsChangeEl = document.getElementById('heroTipsChange');
+    const tipsTimeEl = document.getElementById('heroTipsTime');
+
+    const tipsValue = macroData?.global?.tips_5y?.value;
+    if (tipsValue) {
+      if (tipsPriceEl) tipsPriceEl.textContent = tipsValue + '%';
+      if (tipsChangeEl) tipsChangeEl.textContent = '实际利率';
+      
+      // TIPS > 2% 预警
+      if (parseFloat(tipsValue) > 2) {
+        tipsHero.classList.add('alert-tips');
+        const alertBadge = document.createElement('div');
+        alertBadge.className = 'hero-card-alert tips';
+        alertBadge.textContent = '实际利率偏高';
+        tipsHero.appendChild(alertBadge);
+        if (tipsTimeEl) tipsTimeEl.textContent = '黄金承压信号';
+      } else {
+        if (tipsTimeEl) tipsTimeEl.textContent = '黄金支撑信号';
+      }
+    } else {
+      if (tipsPriceEl) tipsPriceEl.textContent = '暂不可用';
+      if (tipsChangeEl) tipsChangeEl.textContent = '—';
+      if (tipsTimeEl) tipsTimeEl.textContent = '—';
+    }
+  }
 
   function renderPriceCards(goldUSD, goldCNY) {
     // USD价格
@@ -620,7 +728,6 @@ window.GoldModule = (function() {
     const el = document.getElementById('exchangeHedge');
     if (!el || !goldUSD || !goldCNY || !rates) return;
 
-    // 简化：显示汇率对冲说明
     el.innerHTML = `<span style="color:var(--text-2)">USD/CNY=${fmt(rates.USD_CNY, 4)} · 美元走强时，人民币贬值会部分对冲金价涨幅</span>`;
   }
 
@@ -631,14 +738,15 @@ window.GoldModule = (function() {
   async function load() {
     try {
       // 并行获取所有数据
-      const [goldUSD, goldCNY, crudeOil, historyData, marketIndices, seasonality, cftcData] = await Promise.all([
+      const [goldUSD, goldCNY, crudeOil, historyData, marketIndices, seasonality, cftcData, macroData] = await Promise.all([
         window.ApiProxy.fetchGoldPriceUSD(),
         window.ApiProxy.fetchGoldPriceCNY(),
         window.ApiProxy.fetchCrudeOil(),
         window.ApiProxy.fetchGoldHistory('day', 250),
         window.ApiProxy.fetchMarketIndices(),
         fetch('data/seasonality.json').then(r => r.json()).catch(() => null),
-        fetch('data/cftc.json').then(r => r.json()).catch(() => null)
+        fetch('data/cftc.json').then(r => r.json()).catch(() => null),
+        fetch('data/macro-data.json').then(r => r.json()).catch(() => null)
       ]);
 
       // 计算技术指标
@@ -664,12 +772,16 @@ window.GoldModule = (function() {
         cftc: cftcData ? {
           latest: cftcData.history[0],
           previous: cftcData.history[1]
-        } : null
+        } : null,
+        macroData
       };
 
       cachedData = data;
 
-      // 渲染
+      // 渲染大字金价卡片（V3新增）
+      renderHeroCards(goldUSD, goldCNY, macroData);
+
+      // 渲染KPI卡片
       renderPriceCards(goldUSD, goldCNY);
       renderKeyLevels();
       
@@ -713,6 +825,7 @@ window.GoldModule = (function() {
   return {
     load,
     getCachedData: () => cachedData,
-    drawGoldChart
+    drawGoldChart,
+    checkPriceAlert
   };
 })();

@@ -146,12 +146,10 @@ window.CalendarModule = (function() {
     }).join('');
   }
 
-  // =============================================================
   // 主加载函数
-  // =============================================================
-
   async function load() {
     try {
+      // 路径：calendar.js在docs/下，calendar.json在docs/data/下
       const resp = await fetch('data/calendar.json');
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       

@@ -25,23 +25,29 @@
     .num { font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
     ::selection { background: rgba(122,162,255,.3); color: #fff; }
 
-    /* 市场脉搏条 */
-    .pulse-bar { position: fixed; top: 0; left: 0; right: 0; height: 36px; background: linear-gradient(180deg, #0d1015 0%, #0a0c10 100%); border-bottom: 1px solid var(--line); display: flex; align-items: center; padding: 0 12px; z-index: 1000; overflow-x: auto; scrollbar-width: none; gap: 0; }
-    .pulse-bar::-webkit-scrollbar { display: none; }
-    .pulse-item { display: flex; align-items: center; gap: 5px; padding: 0 10px; border-right: 1px solid var(--line); white-space: nowrap; flex-shrink: 0; }
-    .pulse-item:last-of-type { border-right: none; }
-    .pulse-name { font-size: 9px; color: var(--text-2); font-weight: 500; }
-    .pulse-price { font-family: "JetBrains Mono", monospace; font-size: 11px; font-weight: 600; color: var(--text-0); }
-    .pulse-change { font-family: "JetBrains Mono", monospace; font-size: 9px; font-weight: 500; padding: 1px 4px; border-radius: 3px; }
-    .pulse-change.up { background: rgba(255,92,122,.15); color: var(--danger); }
-    .pulse-change.down { background: rgba(61,220,151,.12); color: var(--ok); }
-    .pulse-change.flat { background: var(--bg-2); color: var(--text-2); }
-    .pulse-time { font-size: 9px; color: var(--text-3); margin-left: auto; padding-left: 10px; flex-shrink: 0; }
-    .pulse-loading { font-size: 10px; color: var(--text-3); padding: 0 10px; white-space: nowrap; }
-    .pulse-refresh { background: transparent; border: 1px solid var(--line); color: var(--text-2); font-size: 10px; padding: 2px 8px; border-radius: 4px; cursor: pointer; margin-left: 8px; flex-shrink: 0; }
-    .pulse-refresh:hover { border-color: var(--accent); color: var(--accent); }
+    /* 大字金价卡片 - 黄金决策Tab顶部 */
+    .hero-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap); margin-bottom: 14px; }
+    @media (max-width: 700px) { .hero-cards { grid-template-columns: 1fr; gap: 8px; } }
+    
+    .hero-card { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; position: relative; transition: border-color .2s; }
+    .hero-card.gold-hero { border-left: 4px solid var(--gold); }
+    .hero-card.alert-support { border-color: var(--ok); box-shadow: 0 0 12px rgba(61,220,151,.15); }
+    .hero-card.alert-resistance { border-color: var(--danger); box-shadow: 0 0 12px rgba(255,92,122,.15); }
+    .hero-card.alert-tips { border-color: var(--danger); box-shadow: 0 0 12px rgba(255,92,122,.15); }
+    
+    .hero-card-label { font-size: 10px; color: var(--text-2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+    .hero-card-price { font-family: "JetBrains Mono", monospace; font-size: 28px; font-weight: 700; color: var(--text-0); line-height: 1.1; }
+    .hero-card-price.gold-price { color: var(--gold); }
+    .hero-card-change { font-family: "JetBrains Mono", monospace; font-size: 13px; margin-top: 4px; }
+    .hero-card-change.up { color: var(--danger); }
+    .hero-card-change.down { color: var(--ok); }
+    .hero-card-time { font-size: 9px; color: var(--text-3); margin-top: 6px; }
+    .hero-card-source { font-size: 9px; color: var(--text-3); position: absolute; bottom: 8px; right: 10px; }
+    .hero-card-alert { position: absolute; top: -1px; right: -1px; background: var(--ok); color: #000; font-size: 9px; font-weight: 600; padding: 2px 6px; border-radius: 0 var(--radius) 0 var(--radius-sm); }
+    .hero-card-alert.resistance { background: var(--danger); color: #fff; }
+    .hero-card-alert.tips { background: var(--danger); color: #fff; }
 
-    .main-content { padding-top: 46px; }
+    .main-content { padding-top: 0; }
     .wrap { max-width: 1400px; margin: 0 auto; padding: 12px 16px 60px; }
 
     /* 标题 */
@@ -152,6 +158,7 @@
     .risk-bar-fill.unknown { background: var(--text-3); }
     .risk-value { width: 35px; font-family: "JetBrains Mono", monospace; font-size: 10px; text-align: right; flex-shrink: 0; }
     .risk-desc { font-size: 9px; color: var(--text-3); margin-left: 73px; margin-top: -4px; margin-bottom: 6px; }
+    .risk-action { font-size: 9px; color: var(--accent); margin-top: 4px; }
 
     /* 指标卡片 */
     .indicator-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: var(--gap); }
@@ -166,6 +173,7 @@
     .indicator-card .period { font-size: 9px; color: var(--text-3); margin-top: 4px; }
     .indicator-card .alert-badge { position: absolute; top: 8px; right: 8px; font-size: 9px; padding: 1px 4px; border-radius: 3px; background: rgba(255,180,84,.15); color: var(--warn); }
     .indicator-card .note { font-size: 9px; color: var(--text-3); margin-top: 4px; }
+    .indicator-card .gold-relation { font-size: 9px; color: var(--accent); margin-top: 6px; padding-top: 4px; border-top: 1px solid var(--line); }
 
     /* 央行购金 */
     .cb-card { background: var(--bg-2); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 10px; }
@@ -190,15 +198,21 @@
     .cftc-meta span { margin-right: 12px; }
     .cftc-note { font-size: 10px; color: var(--text-3); }
 
-    /* 技术面表格 */
+    /* 技术面表格 - 小白解读版 */
     .tech-table { width: 100%; border-collapse: collapse; background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
     .tech-table th { background: var(--bg-2); padding: 8px 12px; text-align: left; font-size: 10px; color: var(--text-2); text-transform: uppercase; font-weight: 500; }
-    .tech-table td { padding: 8px 12px; font-size: 12px; border-top: 1px solid var(--line); }
+    .tech-table td { padding: 10px 12px; font-size: 12px; border-top: 1px solid var(--line); }
     .tech-table tr:hover td { background: var(--bg-2); }
     .tech-table .num { font-family: "JetBrains Mono", monospace; }
     .tech-table .up { color: var(--ok); }
     .tech-table .down { color: var(--danger); }
     .tech-table .neutral { color: var(--text-2); }
+    .tech-table .signal-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 6px; }
+    .tech-table .signal-badge.bullish { background: rgba(61,220,151,.15); color: var(--ok); }
+    .tech-table .signal-badge.bearish { background: rgba(255,92,122,.15); color: var(--danger); }
+    .tech-table .signal-badge.neutral { background: var(--bg-3); color: var(--text-2); }
+    .tech-table .signal-badge.waiting { background: rgba(255,180,84,.12); color: var(--warn); }
+    .tech-table .tech-interpretation { font-size: 10px; color: var(--text-2); margin-top: 4px; line-height: 1.4; }
 
     .levels-table { width: 100%; border-collapse: collapse; background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; margin-top: 8px; }
     .levels-table th { background: var(--bg-2); padding: 8px 12px; text-align: left; font-size: 10px; color: var(--text-2); text-transform: uppercase; }
@@ -259,26 +273,19 @@
       .wrap { padding: 10px 12px 80px; }
       .title h1 { font-size: 14px; }
       .title p { display: none; }
-      .pulse-bar { height: 32px; }
-      .pulse-name { display: none; }
       .meta { display: none; }
       .calendar-item { grid-template-columns: 60px 40px 1fr; gap: 6px; }
       .calendar-countdown, .calendar-importance { display: none; }
       .kpis { grid-template-columns: repeat(2, 1fr); }
       .radar-layout { grid-template-columns: 1fr; }
       .gauge-container { order: -1; }
+      .hero-card-price { font-size: 24px; }
     }
   </style>
 </head>
 <body>
 
-<!-- 市场脉搏条 -->
-<div class="pulse-bar" id="pulseBar">
-  <span class="pulse-loading">加载市场数据...</span>
-  <button class="pulse-refresh" onclick="loadMarketPulse()" title="刷新数据">↻</button>
-</div>
-
-<!-- 主内容 -->
+<!-- 主内容 - 无脉搏条，直接从金价卡片开始 -->
 <div class="main-content">
   <div class="wrap">
     <header class="top">
@@ -305,6 +312,31 @@
 
     <!-- Tab 1: 黄金决策 -->
     <div class="tab-pane active" id="tab-gold" role="tabpanel">
+      <!-- 大字金价卡片 -->
+      <div class="hero-cards" id="heroCards">
+        <div class="hero-card gold-hero" id="heroGoldUSD">
+          <div class="hero-card-label">现货黄金 USD</div>
+          <div class="hero-card-price gold-price" id="heroGoldUsdPrice">—</div>
+          <div class="hero-card-change" id="heroGoldUsdChange">—</div>
+          <div class="hero-card-time" id="heroGoldUsdTime">加载中...</div>
+          <div class="hero-card-source">腾讯财经</div>
+        </div>
+        <div class="hero-card" id="heroGoldCNY">
+          <div class="hero-card-label">AU9999 CNY</div>
+          <div class="hero-card-price" id="heroGoldCnyPrice">—</div>
+          <div class="hero-card-change" id="heroGoldCnyChange">—</div>
+          <div class="hero-card-time" id="heroGoldCnyTime">加载中...</div>
+          <div class="hero-card-source">汇率换算</div>
+        </div>
+        <div class="hero-card" id="heroTIPS">
+          <div class="hero-card-label">5Y TIPS 实际利率</div>
+          <div class="hero-card-price" id="heroTipsPrice">—</div>
+          <div class="hero-card-change" id="heroTipsChange">实际利率</div>
+          <div class="hero-card-time" id="heroTipsTime">黄金定价锚</div>
+          <div class="hero-card-source">FRED/搜索数据</div>
+        </div>
+      </div>
+
       <section>
         <h2>金价实时</h2>
         <div class="kpis" id="goldPriceCards">
@@ -380,15 +412,15 @@
     <!-- Tab 2: 技术面 -->
     <div class="tab-pane" id="tab-tech" role="tabpanel">
       <section>
-        <h2>多周期技术指标</h2>
+        <h2>多周期技术指标 <span style="font-size:10px;color:var(--text-3);font-weight:normal">(小白解读版)</span></h2>
         <div id="techIndicators">
           <table class="tech-table">
             <thead>
               <tr>
                 <th>指标</th>
-                <th>周线</th>
-                <th>日线</th>
-                <th>4H</th>
+                <th>当前值</th>
+                <th>信号</th>
+                <th>小白解读</th>
               </tr>
             </thead>
             <tbody id="techTableBody">
@@ -440,7 +472,7 @@
         <div id="cftcData">
           <div class="loading">加载数据...</div>
         </div>
-      </section>
+      </div>
 
       <section>
         <h2>黄金ETF持仓</h2>
@@ -448,7 +480,7 @@
           <div class="loading">加载数据...</div>
         </div>
       </section>
-      <p class="data-source">央行购金来源：世界黄金协会 · CFTC来源：COT报告</p>
+      <p class="data-source">央行购金来源：世界黄金协会 · CFTC来源：COT报告 · 宏观数据来源：搜索结果</p>
     </div>
 
     <!-- Tab 4: 财经日历 -->
@@ -520,10 +552,11 @@
               <li>汇率：exchangerate-api.com</li>
               <li>央行购金：世界黄金协会</li>
               <li>CFTC持仓：美国商品期货交易委员会</li>
+              <li>宏观数据：搜索结果/官方发布</li>
             </ul>
             <p style="margin-top:12px"><strong>免责声明：</strong></p>
             <p style="color:var(--text-2)">本看板数据仅供参考，不构成任何投资建议。投资有风险，决策需谨慎。请在做出任何投资决策前进行独立研究。</p>
-            <p style="margin-top:12px;color:var(--text-3)">版本 2.0 · 2026-06</p>
+            <p style="margin-top:12px;color:var(--text-3)">版本 3.0 · 2026-06</p>
           </div>
         </div>
       </section>
@@ -545,7 +578,7 @@
 <script src="radar.js"></script>
 <script>
 /**
- * 黄金决策看板 - 主控制器
+ * 黄金决策看板 - 主控制器 V3
  */
 
 // 刷新间隔配置
@@ -578,43 +611,6 @@ function updateTime() {
 updateTime();
 setInterval(updateTime, 1000);
 
-// 市场脉搏
-async function loadMarketPulse() {
-  try {
-    const data = await window.ApiProxy.fetchMarketIndices();
-    renderPulseBar(data?.items || []);
-    
-    if (data?.updated_at) {
-      const date = new Date(data.updated_at);
-      document.getElementById('lastUpdate').textContent = '更新 ' + 
-        date.toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'});
-    }
-  } catch (e) {
-    console.warn('市场脉搏加载失败:', e);
-    document.getElementById('pulseBar').innerHTML = '<span class="pulse-loading">数据加载失败</span><button class="pulse-refresh" onclick="loadMarketPulse()">↻</button>';
-  }
-}
-
-function renderPulseBar(items) {
-  const bar = document.getElementById('pulseBar');
-  if (!items || items.length === 0) {
-    bar.innerHTML = '<span class="pulse-loading">暂无数据</span><button class="pulse-refresh" onclick="loadMarketPulse()">↻</button>';
-    return;
-  }
-  
-  const now = new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'});
-  
-  bar.innerHTML = items.slice(0, 5).map(item => {
-    const cls = item.changePct > 0 ? 'up' : item.changePct < 0 ? 'down' : 'flat';
-    const sign = item.changePct > 0 ? '+' : '';
-    return `<div class="pulse-item">
-      <span class="pulse-name">${item.name}</span>
-      <span class="pulse-price">${item.price?.toFixed(item.price > 100 ? 2 : 4) || '—'}</span>
-      <span class="pulse-change ${cls}">${sign}${item.changePct?.toFixed(2) || 0}%</span>
-    </div>`;
-  }).join('') + `<span class="pulse-time">${now}</span><button class="pulse-refresh" onclick="loadMarketPulse()">↻</button>`;
-}
-
 // 黄金数据
 async function loadGoldData() {
   if (window._goldLoaded) return;
@@ -626,7 +622,7 @@ async function loadGoldData() {
   }
 }
 
-// 技术面数据
+// 技术面数据 - 小白解读版
 async function loadTechData() {
   if (window._techLoaded) return;
   window._techLoaded = true;
@@ -646,46 +642,105 @@ async function loadTechData() {
 
     const currentPrice = historyData[historyData.length - 1]?.close;
     
+    // 技术指标小白解读函数
+    const INTERPRETATIONS = {
+      RSI: (val) => {
+        if (val == null) return { label: '数据不足', color: 'neutral', text: 'RSI指标暂无数据', signal: 'waiting' };
+        if (val > 70) return { label: '超买', color: 'bearish', text: '短期可能回调，谨慎追高', signal: 'bearish' };
+        if (val > 60) return { label: '偏强', color: 'bullish', text: '上涨动能较强，可持有', signal: 'bullish' };
+        if (val > 40) return { label: '中性', color: 'neutral', text: '多空博弈中，方向不明', signal: 'neutral' };
+        if (val > 30) return { label: '偏弱', color: 'neutral', text: '下跌动能较强，观望为主', signal: 'neutral' };
+        return { label: '超卖', color: 'bullish', text: '短期可能反弹，关注买入机会', signal: 'bullish' };
+      },
+      MACD: (dif, dea, histogram) => {
+        if (dif == null || dea == null) return { label: '数据不足', color: 'neutral', text: 'MACD指标暂无数据', signal: 'waiting' };
+        if (dif > dea && dif > 0) return { label: '多头', color: 'bullish', text: 'MACD金叉且在零轴上方，强势看多', signal: 'bullish' };
+        if (dif > dea) return { label: '偏多', color: 'bullish', text: 'MACD金叉，短期偏多但力度待确认', signal: 'bullish' };
+        if (dif < dea && dif < 0) return { label: '空头', color: 'bearish', text: 'MACD死叉且在零轴下方，强势看空', signal: 'bearish' };
+        return { label: '偏空', color: 'bearish', text: 'MACD死叉，短期偏空', signal: 'bearish' };
+      },
+      MA_ALIGN: (ma20, ma50, ma200, price) => {
+        if (!ma20?.value || !ma50?.value || !ma200?.value) return { label: '数据不足', color: 'neutral', text: '均线数据暂无', signal: 'waiting' };
+        if (ma20.value > ma50.value && ma50.value > ma200.value) return { label: '多头排列', color: 'bullish', text: '均线多头排列，趋势向上', signal: 'bullish' };
+        if (ma20.value < ma50.value && ma50.value < ma200.value) return { label: '空头排列', color: 'bearish', text: '均线空头排列，趋势向下', signal: 'bearish' };
+        return { label: '交叉', color: 'neutral', text: '均线交叉，趋势待确认', signal: 'neutral' };
+      },
+      MA_POSITION: (price, ma) => {
+        if (!price || !ma?.value) return { label: '数据不足', color: 'neutral', text: '暂无数据', signal: 'waiting' };
+        const diff = ((price - ma.value) / ma.value * 100).toFixed(1);
+        if (diff > 2) return { label: '↗ 偏离+' + diff + '%', color: 'bullish', text: '金价在均线上方，偏多', signal: 'bullish' };
+        if (diff < -2) return { label: '↘ 偏离' + diff + '%', color: 'bearish', text: '金价在均线下方，偏空', signal: 'bearish' };
+        return { label: '→ 偏离' + diff + '%', color: 'neutral', text: '金价贴近均线，震荡整理', signal: 'neutral' };
+      }
+    };
+
+    // 获取MACD数据
+    const macdLatest = indicators.macd?.macd?.length > 0 ? indicators.macd.macd[indicators.macd.macd.length - 1] : null;
+    const dif = macdLatest?.dif;
+    const dea = macdLatest?.dea;
+    const histogram = macdLatest?.histogram;
+
+    const rsiInterp = INTERPRETATIONS.RSI(indicators.rsi?.value);
+    const macdInterp = INTERPRETATIONS.MACD(dif, dea, histogram);
+    const maAlignInterp = INTERPRETATIONS.MA_ALIGN(indicators.ma20, indicators.ma50, indicators.ma200, currentPrice);
+    const ma200PosInterp = INTERPRETATIONS.MA_POSITION(currentPrice, indicators.ma200);
+    const ma50PosInterp = INTERPRETATIONS.MA_POSITION(currentPrice, indicators.ma50);
+
     // 渲染表格
     const tbody = document.getElementById('techTableBody');
-    if (tbody && indicators) {
-      const renderTrend = (value, price) => {
-        if (!value || !price) return '<span class="neutral">—</span>';
-        const diff = ((price - value.value) / value.value * 100).toFixed(1);
-        if (diff > 0.5) return `<span class="up">↑ ${value.value.toFixed(0)}</span>`;
-        if (diff < -0.5) return `<span class="down">↓ ${value.value.toFixed(0)}</span>`;
-        return `<span class="neutral">→ ${value.value.toFixed(0)}</span>`;
+    if (tbody) {
+      const signalBadge = (interp) => {
+        const badgeClass = interp.signal === 'bullish' ? 'bullish' : interp.signal === 'bearish' ? 'bearish' : interp.signal === 'neutral' ? 'neutral' : 'waiting';
+        const icon = interp.signal === 'bullish' ? '🟢' : interp.signal === 'bearish' ? '🔴' : interp.signal === 'neutral' ? '🟡' : '⚪';
+        return `<span class="signal-badge ${badgeClass}">${icon} ${interp.label}</span>`;
       };
 
       tbody.innerHTML = `
         <tr>
-          <td>MA20</td>
-          <td class="num">${renderTrend(indicators.ma20, currentPrice)}</td>
-          <td class="num">${renderTrend(indicators.ma20, currentPrice)}</td>
-          <td class="num">${renderTrend(indicators.ma20, currentPrice)}</td>
+          <td><strong>RSI(14)</strong></td>
+          <td class="num">${indicators.rsi ? indicators.rsi.value.toFixed(1) : '—'}</td>
+          <td>${signalBadge(rsiInterp)}</td>
+          <td>
+            <div class="tech-interpretation">${rsiInterp.text}</div>
+          </td>
         </tr>
         <tr>
-          <td>MA50</td>
-          <td class="num">${renderTrend(indicators.ma50, currentPrice)}</td>
-          <td class="num">${renderTrend(indicators.ma50, currentPrice)}</td>
-          <td class="num">${renderTrend(indicators.ma50, currentPrice)}</td>
+          <td><strong>MACD</strong></td>
+          <td class="num">${macdLatest ? 'DIF:' + dif.toFixed(2) + ' DEA:' + dea.toFixed(2) : '—'}</td>
+          <td>${signalBadge(macdInterp)}</td>
+          <td>
+            <div class="tech-interpretation">${macdInterp.text}</div>
+          </td>
         </tr>
         <tr>
-          <td>MA200</td>
-          <td class="num">${renderTrend(indicators.ma200, currentPrice)}</td>
-          <td class="num">${renderTrend(indicators.ma200, currentPrice)}</td>
-          <td class="num">${renderTrend(indicators.ma200, currentPrice)}</td>
+          <td><strong>均线排列</strong></td>
+          <td class="num">MA20:${indicators.ma20?.value?.toFixed(0) || '—'} MA50:${indicators.ma50?.value?.toFixed(0) || '—'} MA200:${indicators.ma200?.value?.toFixed(0) || '—'}</td>
+          <td>${signalBadge(maAlignInterp)}</td>
+          <td>
+            <div class="tech-interpretation">${maAlignInterp.text}</div>
+          </td>
         </tr>
         <tr>
-          <td>RSI(14)</td>
-          <td class="num" colspan="3">${indicators.rsi ? (indicators.rsi.value > 70 ? '<span class="up">过买 ' + indicators.rsi.value.toFixed(0) + '</span>' : indicators.rsi.value < 30 ? '<span class="down">过卖 ' + indicators.rsi.value.toFixed(0) + '</span>' : indicators.rsi.value.toFixed(0)) : '—'}</td>
+          <td><strong>MA200位置</strong></td>
+          <td class="num">${indicators.ma200?.value?.toFixed(0) || '—'}</td>
+          <td>${signalBadge(ma200PosInterp)}</td>
+          <td>
+            <div class="tech-interpretation">${ma200PosInterp.text}</div>
+          </td>
         </tr>
         <tr>
-          <td>MACD</td>
-          <td class="num" colspan="3">${indicators.macd?.macd?.length ? (indicators.macd.macd[indicators.macd.macd.length-1].histogram > 0 ? '<span class="up">金叉</span>' : '<span class="down">死叉</span>') : '—'}</td>
+          <td><strong>MA50位置</strong></td>
+          <td class="num">${indicators.ma50?.value?.toFixed(0) || '—'}</td>
+          <td>${signalBadge(ma50PosInterp)}</td>
+          <td>
+            <div class="tech-interpretation">${ma50PosInterp.text}</div>
+          </td>
         </tr>
       `;
     }
+
+    // 存储数据供其他地方使用
+    window._techIndicators = indicators;
   } catch (e) {
     console.error('技术数据加载失败:', e);
   }
@@ -734,7 +789,7 @@ function saveSettings() {
   if (refreshTimer) clearInterval(refreshTimer);
   if (refreshIntervalMs > 0) {
     refreshTimer = setInterval(() => {
-      loadMarketPulse();
+      loadGoldData();
     }, refreshIntervalMs);
   }
 }
@@ -753,11 +808,12 @@ function loadSettings() {
 // 初始化
 document.addEventListener('DOMContentLoaded', function() {
   loadSettings();
-  loadMarketPulse();
   
   // 自动刷新
   if (refreshIntervalMs > 0) {
-    refreshTimer = setInterval(loadMarketPulse, refreshIntervalMs);
+    refreshTimer = setInterval(() => {
+      if (window.GoldModule) loadGoldData();
+    }, refreshIntervalMs);
   }
   
   // 延迟加载黄金数据

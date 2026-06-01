@@ -1,0 +1,33 @@
+{
+  "updated": "2026-06-01",
+  "source_note": "数据来自公开搜索结果，标注来源。部分数据标注'暂不可用'",
+  "china": {
+    "cpi": { "value": "1.2", "unit": "%", "period": "2026年4月", "source": "国家统计局" },
+    "ppi": { "value": "2.8", "unit": "%", "period": "2026年4月", "source": "国家统计局" },
+    "pmi_mfg": { "value": "50.0", "unit": "", "period": "2026年5月", "source": "国家统计局" },
+    "m2_growth": { "value": "8.6", "unit": "%", "period": "2026年4月", "source": "央行" },
+    "lpr_1y": { "value": "3.10", "unit": "%", "period": "2026年5月", "source": "央行LPR" },
+    "lpr_5y": { "value": "3.60", "unit": "%", "period": "2026年5月", "source": "央行LPR" }
+  },
+  "us": {
+    "cpi": { "value": "3.8", "unit": "%", "period": "2026年4月", "source": "BLS" },
+    "core_cpi": { "value": "2.8", "unit": "%", "period": "2026年4月", "source": "BLS" },
+    "pce": { "value": "3.8", "unit": "%", "period": "2026年4月", "source": "BEA" },
+    "core_pce": { "value": "3.3", "unit": "%", "period": "2026年4月", "source": "BEA" },
+    "nonfarm": { "value": "11.5万", "unit": "", "period": "2026年4月(5月待发布)", "source": "BLS" },
+    "unemployment": { "value": "4.2", "unit": "%", "period": "2026年4月", "source": "BLS" },
+    "fed_rate": { "value": "4.50", "unit": "%", "period": "当前", "source": "Fed" }
+  },
+  "global": {
+    "tips_5y": { "value": "1.85", "unit": "%", "period": "最新(估算)", "source": "FRED/搜索结果" },
+    "us10y": { "value": "4.47", "unit": "%", "period": "2026-06-01", "source": "FRED" },
+    "dxy": { "value": "99.0", "unit": "", "period": "2026-06-01", "source": "Barchart" },
+    "brent": { "value": "90", "unit": "USD/桶", "period": "2026-06-01", "source": "搜索结果" },
+    "vix": { "value": "18.5", "unit": "", "period": "2026-06-01", "source": "搜索结果" }
+  },
+  "gold": {
+    "spot_price": { "value": "4523", "unit": "USD/oz", "period": "2026-06-01", "source": "搜索结果" },
+    "au9999": { "value": "985", "unit": "CNY/克", "period": "2026-06-01", "source": "上金所" },
+    "change_pct": { "value": "-0.34", "unit": "%", "period": "2026-06-01", "source": "搜索结果" }
+  }
+}
