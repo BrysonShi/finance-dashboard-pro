@@ -1,0 +1,486 @@
+{
+  "events": [
+    {
+      "date": "2026-06-05",
+      "time": "20:30",
+      "country": "US",
+      "event": "美国5月非农就业人口",
+      "importance": "high",
+      "note": "美联储重点关注就业数据"
+    },
+    {
+      "date": "2026-06-05",
+      "time": "20:30",
+      "country": "US",
+      "event": "美国5月失业率",
+      "importance": "high",
+      "note": "与非农同日发布"
+    },
+    {
+      "date": "2026-06-10",
+      "time": "09:30",
+      "country": "CN",
+      "event": "中国5月CPI/PPI同比",
+      "importance": "high",
+      "note": "反映中国通胀状况"
+    },
+    {
+      "date": "2026-06-12",
+      "time": "待定",
+      "country": "US",
+      "event": "美国5月CPI同比",
+      "importance": "high",
+      "note": "美联储利率决策重要参考"
+    },
+    {
+      "date": "2026-06-13",
+      "time": "20:30",
+      "country": "US",
+      "event": "美国5月PPI同比",
+      "importance": "medium",
+      "note": "生产者物价指数"
+    },
+    {
+      "date": "2026-06-16",
+      "time": "02:00",
+      "country": "US",
+      "event": "FOMC利率决议",
+      "importance": "high",
+      "note": "沃什首次主持FOMC会议"
+    },
+    {
+      "date": "2026-06-17",
+      "time": "02:00",
+      "country": "US",
+      "event": "美联储主席沃什新闻发布会",
+      "importance": "high",
+      "note": "首次新闻发布会，市场关注政策信号"
+    },
+    {
+      "date": "2026-06-18",
+      "time": "10:00",
+      "country": "CN",
+      "event": "中国5月社会消费品零售总额",
+      "importance": "medium",
+      "note": "消费数据"
+    },
+    {
+      "date": "2026-06-19",
+      "time": "待定",
+      "country": "CN",
+      "event": "中国5月规模以上工业增加值",
+      "importance": "medium",
+      "note": "工业生产数据"
+    },
+    {
+      "date": "2026-06-25",
+      "time": "14:00",
+      "country": "UK",
+      "event": "英央行利率决议",
+      "importance": "high",
+      "note": "英国央行政策决定"
+    },
+    {
+      "date": "2026-06-26",
+      "time": "待定",
+      "country": "US",
+      "event": "美国第一季度GDP终值",
+      "importance": "medium",
+      "note": "GDP最终修正值"
+    },
+    {
+      "date": "2026-06-30",
+      "time": "20:30",
+      "country": "US",
+      "event": "美国5月PCE物价指数",
+      "importance": "high",
+      "note": "美联储首选通胀指标"
+    },
+    {
+      "date": "2026-07-01",
+      "time": "09:30",
+      "country": "CN",
+      "event": "中国6月财新制造业PMI",
+      "importance": "medium",
+      "note": "制造业活动情况"
+    },
+    {
+      "date": "2026-07-03",
+      "time": "20:30",
+      "country": "US",
+      "event": "美国6月非农就业人口",
+      "importance": "high",
+      "note": "夏季就业数据"
+    },
+    {
+      "date": "2026-07-04",
+      "time": "全天",
+      "country": "US",
+      "event": "美国独立日 - 美股休市",
+      "importance": "high",
+      "note": "7月4日美股全天休市"
+    },
+    {
+      "date": "2026-07-10",
+      "time": "20:30",
+      "country": "US",
+      "event": "美国6月CPI同比",
+      "importance": "high",
+      "note": "年中通胀数据"
+    },
+    {
+      "date": "2026-07-15",
+      "time": "10:00",
+      "country": "CN",
+      "event": "中国第二季度GDP",
+      "importance": "high",
+      "note": "上半年经济增速"
+    },
+    {
+      "date": "2026-07-15",
+      "time": "10:00",
+      "country": "CN",
+      "event": "中国6月社会消费品零售总额",
+      "importance": "medium",
+      "note": "月度消费数据"
+    },
+    {
+      "date": "2026-07-24",
+      "time": "14:00",
+      "country": "EU",
+      "event": "欧洲央行利率决议",
+      "importance": "high",
+      "note": "ECB政策决定"
+    },
+    {
+      "date": "2026-07-25",
+      "time": "02:00",
+      "country": "US",
+      "event": "美联储利率决议",
+      "importance": "high",
+      "note": "7月FOMC会议"
+    },
+    {
+      "date": "2026-07-30",
+      "time": "20:30",
+      "country": "US",
+      "event": "美国6月PCE物价指数",
+      "importance": "high",
+      "note": "美联储首选通胀指标"
+    },
+    {
+      "date": "2026-08-01",
+      "time": "22:00",
+      "country": "US",
+      "event": "美国7月ISM制造业PMI",
+      "importance": "medium",
+      "note": "制造业活动指标"
+    },
+    {
+      "date": "2026-08-05",
+      "time": "20:30",
+      "country": "US",
+      "event": "美国7月非农就业人口",
+      "importance": "high",
+      "note": "夏季就业报告"
+    },
+    {
+      "date": "2026-08-10",
+      "time": "待定",
+      "country": "US",
+      "event": "美国7月CPI同比",
+      "importance": "high",
+      "note": "夏季通胀数据"
+    },
+    {
+      "date": "2026-08-13",
+      "time": "待定",
+      "country": "US",
+      "event": "美国7月PPI同比",
+      "importance": "medium",
+      "note": "生产者物价指数"
+    },
+    {
+      "date": "2026-08-20",
+      "time": "14:00",
+      "country": "UK",
+      "event": "英央行利率决议",
+      "importance": "high",
+      "note": "英国央行政策决定"
+    },
+    {
+      "date": "2026-08-28",
+      "time": "02:00",
+      "country": "US",
+      "event": "美联储利率决议",
+      "importance": "high",
+      "note": "8月FOMC会议（无经济预测）"
+    },
+    {
+      "date": "2026-08-29",
+      "time": "22:00",
+      "country": "US",
+      "event": "美联储主席鲍威尔讲话",
+      "importance": "high",
+      "note": "杰克逊霍尔央行年会前讲话"
+    },
+    {
+      "date": "2026-09-02",
+      "time": "20:30",
+      "country": "US",
+      "event": "美国8月非农就业人口",
+      "importance": "high",
+      "note": "劳动节后首个就业报告"
+    },
+    {
+      "date": "2026-09-05",
+      "time": "全天",
+      "country": "US",
+      "event": "美国劳动节 - 美股休市",
+      "importance": "medium",
+      "note": "9月第一个周一"
+    },
+    {
+      "date": "2026-09-10",
+      "time": "待定",
+      "country": "US",
+      "event": "美国8月CPI同比",
+      "importance": "high",
+      "note": "8月通胀数据"
+    },
+    {
+      "date": "2026-09-16",
+      "time": "22:00",
+      "country": "US",
+      "event": "美国9月纽约联储制造业指数",
+      "importance": "medium",
+      "note": "制造业活动指标"
+    },
+    {
+      "date": "2026-09-17",
+      "time": "02:00",
+      "country": "US",
+      "event": "美联储利率决议",
+      "importance": "high",
+      "note": "9月FOMC会议"
+    },
+    {
+      "date": "2026-09-18",
+      "time": "02:00",
+      "country": "US",
+      "event": "美联储主席鲍威尔新闻发布会",
+      "importance": "high",
+      "note": "利率决定后新闻发布会"
+    },
+    {
+      "date": "2026-09-25",
+      "time": "14:00",
+      "country": "EU",
+      "event": "欧洲央行行长拉加德讲话",
+      "importance": "high",
+      "note": "欧央行政策前景"
+    },
+    {
+      "date": "2026-09-30",
+      "time": "待定",
+      "country": "US",
+      "event": "美国第二季度GDP终值",
+      "importance": "medium",
+      "note": "GDP最终修正值"
+    },
+    {
+      "date": "2026-10-01",
+      "time": "09:30",
+      "country": "CN",
+      "event": "中国9月财新制造业PMI",
+      "importance": "medium",
+      "note": "季度末制造业数据"
+    },
+    {
+      "date": "2026-10-03",
+      "time": "全天",
+      "country": "US",
+      "event": "美国非农日（具体待定）",
+      "importance": "high",
+      "note": "10月非农就业报告"
+    },
+    {
+      "date": "2026-10-10",
+      "time": "待定",
+      "country": "US",
+      "event": "美国9月CPI同比",
+      "importance": "high",
+      "note": "第三季度通胀数据"
+    },
+    {
+      "date": "2026-10-14",
+      "time": "14:00",
+      "country": "UK",
+      "event": "英央行利率决议",
+      "importance": "high",
+      "note": "英国央行政策决定"
+    },
+    {
+      "date": "2026-10-24",
+      "time": "14:00",
+      "country": "EU",
+      "event": "欧洲央行利率决议",
+      "importance": "high",
+      "note": "ECB政策决定"
+    },
+    {
+      "date": "2026-10-29",
+      "time": "20:30",
+      "country": "US",
+      "event": "美国9月PCE物价指数",
+      "importance": "high",
+      "note": "美联储首选通胀指标"
+    },
+    {
+      "date": "2026-10-30",
+      "time": "02:00",
+      "country": "US",
+      "event": "美联储利率决议",
+      "importance": "high",
+      "note": "10月FOMC会议"
+    },
+    {
+      "date": "2026-10-31",
+      "time": "09:30",
+      "country": "CN",
+      "event": "中国9月官方制造业PMI",
+      "importance": "high",
+      "note": "季度末PMI数据"
+    },
+    {
+      "date": "2026-11-03",
+      "time": "20:30",
+      "country": "US",
+      "event": "美国10月非农就业人口",
+      "importance": "high",
+      "note": "大选后首个就业报告"
+    },
+    {
+      "date": "2026-11-05",
+      "time": "全天",
+      "country": "US",
+      "event": "美国总统大选日",
+      "importance": "high",
+      "note": "市场可能剧烈波动"
+    },
+    {
+      "date": "2026-11-07",
+      "time": "待定",
+      "country": "US",
+      "event": "美国10月CPI同比",
+      "importance": "high",
+      "note": "大选后通胀数据"
+    },
+    {
+      "date": "2026-11-12",
+      "time": "14:00",
+      "country": "UK",
+      "event": "英央行利率决议",
+      "importance": "high",
+      "note": "英国央行政策决定"
+    },
+    {
+      "date": "2026-11-19",
+      "time": "待定",
+      "country": "US",
+      "event": "美国10月PPI同比",
+      "importance": "medium",
+      "note": "生产者物价指数"
+    },
+    {
+      "date": "2026-11-26",
+      "time": "全天",
+      "country": "US",
+      "event": "感恩节 - 美股休市",
+      "importance": "high",
+      "note": "11月第四个周四"
+    },
+    {
+      "date": "2026-11-27",
+      "time": "全天",
+      "country": "US",
+      "event": "感恩节次日 - 美股提前收盘",
+      "importance": "medium",
+      "note": "感恩节后次日13:00收盘"
+    },
+    {
+      "date": "2026-12-03",
+      "time": "20:30",
+      "country": "US",
+      "event": "美国11月非农就业人口",
+      "importance": "high",
+      "note": "年末就业报告"
+    },
+    {
+      "date": "2026-12-10",
+      "time": "待定",
+      "country": "US",
+      "event": "美国11月CPI同比",
+      "importance": "high",
+      "note": "年末通胀数据"
+    },
+    {
+      "date": "2026-12-11",
+      "time": "待定",
+      "country": "CN",
+      "event": "中国11月CPI/PPI同比",
+      "importance": "high",
+      "note": "中国通胀数据"
+    },
+    {
+      "date": "2026-12-15",
+      "time": "02:00",
+      "country": "US",
+      "event": "美联储利率决议",
+      "importance": "high",
+      "note": "12月FOMC会议（年内最后一次）"
+    },
+    {
+      "date": "2026-12-16",
+      "time": "02:00",
+      "country": "US",
+      "event": "美联储季度经济预测",
+      "importance": "high",
+      "note": "SEP经济预测摘要"
+    },
+    {
+      "date": "2026-12-17",
+      "time": "02:00",
+      "country": "US",
+      "event": "美联储主席鲍威尔新闻发布会",
+      "importance": "high",
+      "note": "年度最后一次新闻发布会"
+    },
+    {
+      "date": "2026-12-24",
+      "time": "全天",
+      "country": "US",
+      "event": "平安夜 - 美股提前收盘",
+      "importance": "medium",
+      "note": "13:00收盘"
+    },
+    {
+      "date": "2026-12-25",
+      "time": "全天",
+      "country": "US",
+      "event": "圣诞节 - 美股休市",
+      "importance": "high",
+      "note": "圣诞节"
+    },
+    {
+      "date": "2026-12-31",
+      "time": "全天",
+      "country": "US",
+      "event": "元旦前夕 - 美股提前收盘",
+      "importance": "medium",
+      "note": "新年夜美股提前收盘"
+    }
+  ],
+  "note": "数据更新于2026年6月。部分日期为预估值，实际日期可能有所调整。请在事件临近时确认具体时间。",
+  "sources": ["美国劳工统计局", "美联储", "中国国家统计局", "中国人民银行", "欧洲央行", "英国央行"]
+}
