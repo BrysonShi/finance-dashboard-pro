@@ -234,23 +234,38 @@ window.ApiProxy = (function() {
   async function fetchGoldHistory(period = 'day', count = 250) {
     const cacheKey = `gold_history_${period}_${count}`;
     const cached = getCache(cacheKey);
-    if (cached) return cached;
+    if (cached && cached.length > 0) return cached;
 
     try {
       // 使用黄金ETF sh518880 的K线（期货代码hf_GC不支持此接口）
       // ETF价格与金价高度正相关，技术指标有效
       const url = `https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=sh518880,${period},,,${count},qfq`;
+      console.log('[ApiProxy] 请求K线:', url);
       const resp = await fetchWithTimeout(url);
+      
+      if (!resp.ok) {
+        throw new Error('HTTP ' + resp.status);
+      }
+      
       const json = await resp.json();
+      console.log('[ApiProxy] K线返回code:', json.code, 'data keys:', json.data ? Object.keys(json.data) : 'null');
       
       const etfData = json.data?.sh518880;
       if (!etfData) {
-        throw new Error('K线数据返回异常');
+        throw new Error('K线数据返回异常: 无sh518880');
       }
 
       // 日K在qfqday，周K在qfqweek
       let klineKey = period === 'week' ? 'qfqweek' : 'qfqday';
       let klineData = etfData[klineKey] || [];
+      console.log('[ApiProxy] K线条数:', klineData.length, 'key:', klineKey);
+      
+      if (klineData.length === 0) {
+        // 尝试备用key
+        klineKey = 'day';
+        klineData = etfData[klineKey] || [];
+        console.log('[ApiProxy] 尝试备用key:', klineKey, '条数:', klineData.length);
+      }
       
       // 解析K线数据 [日期, 开, 收, 高, 低, 量]
       const data = klineData.map(item => ({
@@ -262,10 +277,14 @@ window.ApiProxy = (function() {
         volume: parseFloat(item[5]) || 0
       })).filter(d => !isNaN(d.close));
 
+      if (data.length === 0) {
+        console.warn('[ApiProxy] K线解析后为空，原始数据:', JSON.stringify(klineData.slice(0,2)));
+      }
+      
       setCache(cacheKey, data);
       return data;
     } catch (e) {
-      console.error('黄金K线获取失败:', e);
+      console.error('[ApiProxy] 黄金K线获取失败:', e.message);
       return null;
     }
   }

@@ -434,6 +434,9 @@
             </tbody>
           </table>
         </div>
+        <div style="text-align:center;margin-top:8px">
+          <button onclick="window._techLoaded=false;loadTechData()" style="background:var(--bg-2);color:var(--text-1);border:1px solid var(--line);border-radius:4px;padding:6px 16px;font-size:12px;cursor:pointer">🔄 重新加载</button>
+        </div>
       </section>
 
       <section>
@@ -674,33 +677,26 @@ async function loadGoldData() {
 async function loadTechData() {
   if (window._techLoaded) return;
   
-  // 显示加载中
   const tbody = document.getElementById('techTableBody');
   if (tbody) tbody.innerHTML = '<tr><td colspan="4"><div class="loading">加载技术数据...</div></td></tr>';
   
   try {
-    // 等待GoldModule加载完成，复用数据
-    let historyData = null;
+    // 直接请求K线数据，不依赖GoldModule
+    let historyData = await window.ApiProxy.fetchGoldHistory('day', 250);
     
-    // 先等GoldModule加载（最多等8秒）
-    if (!window._goldTechData?.history) {
-      for (let i = 0; i < 16; i++) {
-        await new Promise(r => setTimeout(r, 500));
-        if (window._goldTechData?.history) break;
-      }
-    }
-    
-    if (window._goldTechData?.history && window._goldTechData.history.length > 0) {
-      historyData = window._goldTechData.history;
-    } else {
-      // 兜底：直接请求
+    // 如果失败，等2秒重试一次
+    if (!historyData || historyData.length === 0) {
+      console.warn('[Tech] K线首次请求失败，2秒后重试...');
+      await new Promise(r => setTimeout(r, 2000));
       historyData = await window.ApiProxy.fetchGoldHistory('day', 250);
     }
     
     if (!historyData || historyData.length === 0) {
-      if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-3);padding:20px">K线数据暂不可用，请刷新页面重试</td></tr>';
+      if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-3);padding:20px">K线数据暂不可用，请刷新页面重试<br><span style="font-size:10px">数据源：腾讯财经 sh518880</span></td></tr>';
       return;
     }
+    
+    console.log('[Tech] K线数据加载成功，共', historyData.length, '条');
     window._techLoaded = true;
 
     // 计算各周期指标
