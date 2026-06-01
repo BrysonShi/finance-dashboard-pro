@@ -402,26 +402,7 @@ window.MacroModule = (function() {
     `;
   }
 
-  /**
-   * 渲染黄金ETF
-   */
-  function renderGoldETF() {
-    const container = document.getElementById('goldETF');
-    if (!container) return;
-    
-    container.innerHTML = `
-      <div class="indicator-card">
-        <div class="name">SPDR黄金ETF (GLD)</div>
-        <div class="value">—<span class="unit">吨</span></div>
-        <div class="period">数据暂不可用</div>
-      </div>
-      <div class="indicator-card">
-        <div class="name">iShares黄金ETF (IAU)</div>
-        <div class="value">—<span class="unit">吨</span></div>
-        <div class="period">数据暂不可用</div>
-      </div>
-    `;
-  }
+  // 黄金ETF持仓模块已移除（暂无可靠免费数据接口）
 
   // =============================================================
   // 主加载函数

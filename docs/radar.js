@@ -240,8 +240,6 @@ window.RadarModule = (function() {
   function calculateLiquidityRisk(data) {
     const risks = [];
 
-    // ETF持仓变化
-    risks.push({ label: 'ETF持仓', level: 'unknown', value: 0, desc: '数据暂不可用', action: '—' });
 
     // CFTC净多头极端度
     if (data.cftc?.latest) {
