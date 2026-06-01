@@ -7,10 +7,15 @@
 window.GoldModule = (function() {
   'use strict';
 
-  // 关键价位配置
-  const KEY_LEVELS = {
+  // 关键价位配置（现货黄金USD/盎司）
+  const GOLD_KEY_LEVELS = {
     support: [4360, 4450, 4500],
     resistance: [4600, 4700]
+  };
+  // ETF关键价位（sh518880，元）- 用于图表显示
+  const ETF_KEY_LEVELS = {
+    support: [8.5, 8.8, 9.0],
+    resistance: [9.5, 9.8]
   };
 
   // 加仓信号配置（与财经日历10条规则对齐）
@@ -324,6 +329,12 @@ window.GoldModule = (function() {
       return;
     }
 
+    // 图表标题
+    ctx.fillStyle = '#5e677a';
+    ctx.font = '10px Inter';
+    ctx.textAlign = 'left';
+    ctx.fillText('黄金ETF 518880 (元)', padding.left, 12);
+
     // 计算价格范围
     const prices = data.map(d => d.close);
     const minPrice = Math.min(...prices) * 0.98;
@@ -345,7 +356,7 @@ window.GoldModule = (function() {
       ctx.fillStyle = '#5e677a';
       ctx.font = '10px JetBrains Mono';
       ctx.textAlign = 'right';
-      ctx.fillText('$' + Math.round(price), width - 5, y + 3);
+      ctx.fillText('¥' + price.toFixed(2), width - 5, y + 3);
     }
 
     // 绘制关键价位线
@@ -369,12 +380,12 @@ window.GoldModule = (function() {
     };
 
     // 支撑位和阻力位
-    KEY_LEVELS.support.forEach(level => {
+    ETF_KEY_LEVELS.support.forEach(level => {
       if (level >= minPrice && level <= maxPrice) {
         drawLevelLine(level, '#3ddc97', level.toString());
       }
     });
-    KEY_LEVELS.resistance.forEach(level => {
+    ETF_KEY_LEVELS.resistance.forEach(level => {
       if (level >= minPrice && level <= maxPrice) {
         drawLevelLine(level, '#ff5c7a', level.toString());
       }
@@ -470,7 +481,7 @@ window.GoldModule = (function() {
     ctx.fillStyle = '#d4a64a';
     ctx.font = 'bold 10px JetBrains Mono';
     ctx.textAlign = 'center';
-    ctx.fillText('$' + Math.round(lastPrice), width - padding.right + 22, lastY + 4);
+    ctx.fillText('¥' + lastPrice.toFixed(2), width - padding.right + 22, lastY + 4);
 
     // X轴日期标签
     ctx.fillStyle = '#5e677a';
@@ -529,12 +540,12 @@ window.GoldModule = (function() {
     const resistEl = document.getElementById('resistanceLevels');
 
     if (supportEl) {
-      supportEl.innerHTML = KEY_LEVELS.support.map(v => 
+      supportEl.innerHTML = GOLD_KEY_LEVELS.support.map(v => 
         `<div class="level-item support"><div class="level-label">支撑</div><div class="level-value">${v}</div></div>`
       ).join('');
     }
     if (resistEl) {
-      resistEl.innerHTML = KEY_LEVELS.resistance.map(v => 
+      resistEl.innerHTML = GOLD_KEY_LEVELS.resistance.map(v => 
         `<div class="level-item resistance"><div class="level-label">阻力</div><div class="level-value">${v}</div></div>`
       ).join('');
     }

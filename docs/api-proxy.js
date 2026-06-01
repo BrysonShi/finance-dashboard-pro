@@ -237,16 +237,20 @@ window.ApiProxy = (function() {
     if (cached) return cached;
 
     try {
-      // 腾讯财经K线接口
-      const url = `https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=hf_GC,${period},,,${count},qfq`;
+      // 使用黄金ETF sh518880 的K线（期货代码hf_GC不支持此接口）
+      // ETF价格与金价高度正相关，技术指标有效
+      const url = `https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=sh518880,${period},,,${count},qfq`;
       const resp = await fetchWithTimeout(url);
       const json = await resp.json();
       
-      if (!json.data || !json.data.hf_GC) {
+      const etfData = json.data?.sh518880;
+      if (!etfData) {
         throw new Error('K线数据返回异常');
       }
 
-      const klineData = json.data.hf_GC[period] || [];
+      // 日K在qfqday，周K在qfqweek
+      let klineKey = period === 'week' ? 'qfqweek' : 'qfqday';
+      let klineData = etfData[klineKey] || [];
       
       // 解析K线数据 [日期, 开, 收, 高, 低, 量]
       const data = klineData.map(item => ({
