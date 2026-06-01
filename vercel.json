@@ -1,6 +1,6 @@
 {
   "buildCommand": null,
-  "outputDirectory": "public",
+  "outputDirectory": "docs",
   "installCommand": null,
   "framework": null,
   "routes": [
