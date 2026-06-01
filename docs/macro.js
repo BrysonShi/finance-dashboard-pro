@@ -438,7 +438,6 @@ window.MacroModule = (function() {
       renderCoreDrivers(data);
       renderCentralBankGold(cbData);
       renderCFTC(cftcData);
-      renderGoldETF();
 
       return data;
     } catch (e) {
