@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI Finance Dashboard Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-0: #0a0c10; --bg-1: #0e1116; --bg-2: #13171f; --bg-3: #1a1f2a;
+      --line: #1f2533; --line-2: #2a3243;
+      --text-0: #e8ecf3; --text-1: #9ba4b6; --text-2: #5e677a; --text-3: #3e4658;
+      --accent: #7aa2ff; --accent-2: #a5beff;
+      --ok: #3ddc97; --warn: #ffb454; --danger: #ff5c7a; --gold: #d4a64a;
+      --rmb: #5b8bff; --usd: #3ddc97; --hkd: #c084fc;
+      --fs-h1: 18px; --fs-h2: 13px; --fs-body: 13px; --fs-sm: 12px; --fs-xs: 11px;
+      --fs-num-lg: 22px; --fs-num-xl: 26px;
+      --pad-card: 14px 16px; --gap: 10px; --gap-sm: 6px;
+      --radius: 8px; --radius-sm: 6px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg-0); color: var(--text-0); font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; -webkit-font-smoothing: antialiased; font-size: 14px; line-height: 1.5; }
+    .num { font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
+    ::selection { background: rgba(122,162,255,.3); color: #fff; }
+
+    /* 市场脉搏条 */
+    .pulse-bar { position: fixed; top: 0; left: 0; right: 0; height: 42px; background: linear-gradient(180deg, #0d1015 0%, #0a0c10 100%); border-bottom: 1px solid var(--line); display: flex; align-items: center; padding: 0 12px; z-index: 1000; overflow-x: auto; scrollbar-width: none; }
+    .pulse-bar::-webkit-scrollbar { display: none; }
+    .pulse-item { display: flex; align-items: center; gap: 8px; padding: 0 16px; border-right: 1px solid var(--line); white-space: nowrap; flex-shrink: 0; }
+    .pulse-item:first-child { padding-left: 0; }
+    .pulse-name { font-size: 11px; color: var(--text-2); font-weight: 500; }
+    .pulse-price { font-family: "JetBrains Mono", monospace; font-size: 13px; font-weight: 600; color: var(--text-0); }
+    .pulse-change { font-family: "JetBrains Mono", monospace; font-size: 11px; font-weight: 500; padding: 2px 5px; border-radius: 3px; }
+    .pulse-change.up { background: rgba(255,92,122,.15); color: var(--danger); }
+    .pulse-change.down { background: rgba(61,220,151,.12); color: var(--ok); }
+    .pulse-change.flat { background: var(--bg-2); color: var(--text-2); }
+    .pulse-sparkline { width: 40px; height: 20px; }
+    .pulse-loading { font-size: 11px; color: var(--text-3); padding: 0 16px; }
+    .pulse-refresh { font-size: 10px; color: var(--text-3); margin-left: auto; flex-shrink: 0; padding-left: 16px; }
+
+    .main-content { padding-top: 52px; }
+    .wrap { max-width: 1400px; margin: 0 auto; padding: 18px 22px 60px; }
+
+    header.top { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 14px; border-bottom: 1px solid var(--line); padding-bottom: 12px; flex-wrap: wrap; }
+    .title { display: flex; align-items: baseline; gap: 10px; }
+    .title h1 { margin: 0; font-size: var(--fs-h1); letter-spacing: .2px; font-weight: 600; }
+    .title .v { color: var(--text-2); font-size: 11px; font-family: "JetBrains Mono", monospace; border: 1px solid var(--line-2); padding: 1px 6px; border-radius: 4px; }
+    .title p { margin: 0; color: var(--text-2); font-size: var(--fs-xs); }
+    .meta { display: flex; align-items: center; gap: 14px; color: var(--text-2); font-size: var(--fs-xs); font-family: "JetBrains Mono", monospace; }
+    .meta .sep { width: 1px; height: 14px; background: var(--line-2); }
+    .meta b { color: var(--text-0); font-weight: 500; }
+
+    .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--line); margin-bottom: 14px; overflow-x: auto; }
+    .tab-btn { background: transparent; border: none; color: var(--text-2); font: inherit; font-size: var(--fs-body); padding: 8px 14px; cursor: pointer; border-bottom: 2px solid transparent; transition: color .12s, border-color .12s; white-space: nowrap; font-weight: 500; }
+    .tab-btn:hover { color: var(--text-0); }
+    .tab-btn.active { color: var(--text-0); border-bottom-color: var(--accent); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    section { margin-top: 18px; }
+    h2 { font-size: var(--fs-h2); letter-spacing: .3px; margin: 0 0 8px; color: var(--text-1); font-weight: 500; text-transform: uppercase; }
+
+    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gap); margin-bottom: var(--gap); }
+    @media (max-width: 1080px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .kpis { grid-template-columns: 1fr; } }
+
+    .kpi { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--pad-card); display: flex; flex-direction: column; gap: 2px; transition: border-color .12s; }
+    .kpi:hover { border-color: var(--line-2); }
+    .kpi .label { font-size: var(--fs-xs); color: var(--text-2); letter-spacing: .3px; text-transform: uppercase; font-weight: 500; margin-bottom: 2px; }
+    .kpi .value { font-size: var(--fs-num-lg); font-weight: 600; letter-spacing: -.3px; line-height: 1.15; color: var(--text-0); }
+    .kpi .sub { font-size: var(--fs-xs); color: var(--text-2); line-height: 1.4; margin-top: 1px; }
+    .kpi .delta { font-size: var(--fs-xs); font-family: "JetBrains Mono", monospace; margin-top: 3px; }
+    .kpi .delta.up { color: var(--danger); }
+    .kpi .delta.down { color: var(--ok); }
+    .kpi .delta.flat { color: var(--text-2); }
+    .kpi.gold { border-left: 3px solid var(--gold); }
+
+    .signal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--gap); }
+    .signal-item { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; display: flex; align-items: center; gap: 10px; transition: border-color .12s; }
+    .signal-item:hover { border-color: var(--line-2); }
+    .signal-light { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .signal-light.green { background: var(--ok); box-shadow: 0 0 8px rgba(61,220,151,.4); }
+    .signal-light.yellow { background: var(--warn); box-shadow: 0 0 8px rgba(255,180,84,.4); }
+    .signal-light.red { background: var(--danger); box-shadow: 0 0 8px rgba(255,92,122,.4); }
+    .signal-light.gray { background: var(--text-3); }
+    .signal-name { flex: 1; font-size: var(--fs-sm); color: var(--text-1); }
+    .signal-status { font-size: var(--fs-xs); font-family: "JetBrains Mono", monospace; padding: 2px 6px; border-radius: 3px; }
+    .signal-status.green { background: rgba(61,220,151,.12); color: var(--ok); }
+    .signal-status.yellow { background: rgba(255,180,84,.12); color: var(--warn); }
+    .signal-status.red { background: rgba(255,92,122,.14); color: var(--danger); }
+    .signal-status.gray { background: var(--bg-2); color: var(--text-3); }
+
+    .chart-container { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--pad-card); margin-bottom: var(--gap); }
+    .chart-title { font-size: var(--fs-sm); color: var(--text-1); margin-bottom: 12px; }
+    .chart-svg { width: 100%; height: 160px; }
+    .chart-legend { display: flex; gap: 16px; font-size: var(--fs-xs); color: var(--text-2); margin-top: 8px; }
+    .chart-legend-item { display: flex; align-items: center; gap: 6px; }
+    .chart-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    .levels-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: var(--gap-sm); }
+    .level-item { background: var(--bg-2); border-radius: var(--radius-sm); padding: 8px 12px; text-align: center; }
+    .level-item.support { border-left: 2px solid var(--ok); }
+    .level-item.resistance { border-left: 2px solid var(--danger); }
+    .level-label { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: .3px; }
+    .level-value { font-family: "JetBrains Mono", monospace; font-size: 14px; font-weight: 600; color: var(--text-0); margin-top: 2px; }
+
+    .alert-banner { background: rgba(255,92,122,.12); border: 1px solid rgba(255,92,122,.3); border-radius: var(--radius); padding: 10px 14px; display: flex; align-items: center; gap: 10px; margin-bottom: var(--gap); }
+    .alert-banner.ok { background: rgba(61,220,151,.08); border-color: rgba(61,220,151,.2); }
+    .alert-icon { font-size: 18px; }
+    .alert-text { font-size: var(--fs-sm); color: var(--danger); }
+    .alert-text.ok { color: var(--ok); }
+    .alert-text strong { font-weight: 600; }
+
+    .indicator-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--gap); }
+    .indicator-card { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--pad-card); position: relative; }
+    .indicator-card.alert, .indicator-card.danger { border-color: rgba(255,180,84,.4); }
+    .indicator-card .name { font-size: var(--fs-xs); color: var(--text-2); text-transform: uppercase; letter-spacing: .3px; }
+    .indicator-card .value { font-family: "JetBrains Mono", monospace; font-size: var(--fs-num-lg); font-weight: 600; color: var(--text-0); margin-top: 4px; }
+    .indicator-card .value .unit { font-size: var(--fs-sm); color: var(--text-2); font-weight: 400; margin-left: 2px; }
+    .indicator-card .change { font-size: var(--fs-xs); font-family: "JetBrains Mono", monospace; margin-top: 4px; }
+    .indicator-card .change.up { color: var(--danger); }
+    .indicator-card .change.down { color: var(--ok); }
+    .indicator-card .period { font-size: 10px; color: var(--text-3); margin-top: 6px; }
+    .indicator-card .alert-badge { position: absolute; top: 10px; right: 10px; font-size: 10px; padding: 2px 6px; border-radius: 3px; background: rgba(255,180,84,.15); color: var(--warn); }
+
+    .calendar-list { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    .calendar-item { display: grid; grid-template-columns: 80px 50px 1fr auto; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--line); align-items: center; transition: background .12s; }
+    .calendar-item:last-child { border-bottom: none; }
+    .calendar-item:hover { background: var(--bg-2); }
+    .calendar-item.high { border-left: 2px solid var(--danger); }
+    .calendar-item.medium { border-left: 2px solid var(--warn); }
+    .calendar-date { font-family: "JetBrains Mono", monospace; font-size: var(--fs-sm); color: var(--text-1); }
+    .calendar-country { font-size: 10px; padding: 2px 5px; border-radius: 3px; background: var(--bg-3); color: var(--text-2); text-align: center; }
+    .calendar-event { font-size: var(--fs-sm); color: var(--text-0); }
+    .calendar-importance { font-size: 10px; font-family: "JetBrains Mono", monospace; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; }
+    .calendar-importance.high { background: rgba(255,92,122,.15); color: var(--danger); }
+    .calendar-importance.medium { background: rgba(255,180,84,.12); color: var(--warn); }
+    .calendar-importance.low { background: var(--bg-3); color: var(--text-3); }
+
+    .radar-container { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); }
+    @media (max-width: 768px) { .radar-container { grid-template-columns: 1fr; } }
+    .risk-card { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--pad-card); }
+    .risk-card h3 { margin: 0 0 12px; font-size: var(--fs-sm); color: var(--text-1); font-weight: 500; }
+    .risk-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .risk-label { width: 80px; font-size: var(--fs-xs); color: var(--text-2); }
+    .risk-bar-track { flex: 1; height: 8px; background: var(--bg-3); border-radius: 4px; overflow: hidden; }
+    .risk-bar-fill { height: 100%; border-radius: 4px; transition: width .3s; }
+    .risk-bar-fill.low { background: var(--ok); }
+    .risk-bar-fill.medium { background: var(--warn); }
+    .risk-bar-fill.high { background: var(--danger); }
+    .risk-value { width: 40px; font-family: "JetBrains Mono", monospace; font-size: var(--fs-xs); text-align: right; }
+
+    .loading { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--text-3); font-size: var(--fs-sm); }
+    .loading::before { content: ""; width: 16px; height: 16px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 10px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<!-- 顶部市场脉搏条 -->
+<div class="pulse-bar" id="pulseBar">
+  <span class="pulse-loading">加载市场数据...</span>
+</div>
+
+<!-- 主内容 -->
+<div class="main-content">
+  <div class="wrap">
+    <header class="top">
+      <div class="title">
+        <h1>AI Finance Dashboard</h1>
+        <span class="v">Pro</span>
+        <p>家庭财务三本账 + 黄金监控 + 宏观脉搏</p>
+      </div>
+      <div class="meta">
+        <span id="lastUpdate">—</span>
+        <span class="sep"></span>
+        <b id="currentTime">—</b>
+      </div>
+    </header>
+
+    <!-- Tabs -->
+    <div class="tabs" role="tablist">
+      <button class="tab-btn active" data-tab="assets" role="tab">📊 资产配置</button>
+      <button class="tab-btn" data-tab="liabilities" role="tab">💳 负债管理</button>
+      <button class="tab-btn" data-tab="cashflow" role="tab">💰 现金流</button>
+      <button class="tab-btn" data-tab="gold" role="tab">🥇 黄金监控</button>
+      <button class="tab-btn" data-tab="macro" role="tab">🌐 宏观数据</button>
+      <button class="tab-btn" data-tab="calendar" role="tab">📅 财经日历</button>
+      <button class="tab-btn" data-tab="radar" role="tab">🎯 风险雷达</button>
+    </div>
+
+    <!-- Tab 1: 资产配置 -->
+    <div class="tab-pane active" id="tab-assets" role="tabpanel">
+      <section>
+        <h2>资产配置总览</h2>
+        <div class="kpis" id="assetsKpis">
+          <div class="kpi">
+            <div class="label">总资产</div>
+            <div class="value num" id="totalAssets">—</div>
+            <div class="sub">折合人民币</div>
+          </div>
+          <div class="kpi">
+            <div class="label">年化收益率</div>
+            <div class="value num" id="annualReturn">—</div>
+            <div class="sub">保守估算</div>
+          </div>
+          <div class="kpi">
+            <div class="label">目标进度</div>
+            <div class="value num" id="targetProgress">—</div>
+            <div class="sub">FIRE 目标</div>
+          </div>
+          <div class="kpi">
+            <div class="label">健康状态</div>
+            <div class="value" id="healthStatus">—</div>
+            <div class="sub" id="healthNote">—</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Tab 2: 负债管理 -->
+    <div class="tab-pane" id="tab-liabilities" role="tabpanel">
+      <section>
+        <h2>负债概览</h2>
+        <div class="kpis">
+          <div class="kpi">
+            <div class="label">总负债</div>
+            <div class="value num" id="totalLiabilities">—</div>
+            <div class="sub">人民币</div>
+          </div>
+          <div class="kpi">
+            <div class="label">月供支出</div>
+            <div class="value num" id="monthlyPayment">—</div>
+            <div class="sub">每月</div>
+          </div>
+          <div class="kpi">
+            <div class="label">资产负债率</div>
+            <div class="value num" id="debtRatio">—</div>
+            <div class="sub" id="debtNote">—</div>
+          </div>
+          <div class="kpi">
+            <div class="label">偿债进度</div>
+            <div class="value num" id="repaymentProgress">—</div>
+            <div class="sub">已还比例</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Tab 3: 现金流 -->
+    <div class="tab-pane" id="tab-cashflow" role="tabpanel">
+      <section>
+        <h2>现金流追踪</h2>
+        <div class="kpis">
+          <div class="kpi">
+            <div class="label">月收入</div>
+            <div class="value num" id="monthlyIncome">—</div>
+            <div class="sub">税后</div>
+          </div>
+          <div class="kpi">
+            <div class="label">月支出</div>
+            <div class="value num" id="monthlyExpense">—</div>
+            <div class="sub">固定+浮动</div>
+          </div>
+          <div class="kpi">
+            <div class="label">月结余</div>
+            <div class="value num" id="monthlySurplus">—</div>
+            <div class="sub" id="surplusNote">—</div>
+          </div>
+          <div class="kpi">
+            <div class="label">年储蓄率</div>
+            <div class="value num" id="savingsRate">—</div>
+            <div class="sub">目标 ≥30%</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Tab 4: 黄金监控 -->
+    <div class="tab-pane" id="tab-gold" role="tabpanel">
+      <section>
+        <h2>🥇 黄金持仓监控</h2>
+        <div class="kpis" id="goldPriceCards">
+          <div class="kpi gold">
+            <div class="label">现货黄金 (USD)</div>
+            <div class="value num" id="goldUsdPrice">—</div>
+            <div class="delta" id="goldUsdChange">—</div>
+          </div>
+          <div class="kpi gold">
+            <div class="label">AU9999 (CNY)</div>
+            <div class="value num" id="goldCnyPrice">—</div>
+            <div class="delta" id="goldCnyChange">—</div>
+          </div>
+          <div class="kpi gold">
+            <div class="label">持仓市值</div>
+            <div class="value num" id="goldMarketValue">—</div>
+            <div class="delta" id="goldPnl">—</div>
+          </div>
+          <div class="kpi gold">
+            <div class="label">持仓成本</div>
+            <div class="value num" id="goldCost">—</div>
+            <div class="sub">1055元/克 × 50克</div>
+          </div>
+        </div>
+
+        <div id="goldAlertArea"></div>
+        <h2>加仓信号评估 <span style="font-size:11px;color:var(--text-3);font-weight:400">(满足≥2条建议加仓)</span></h2>
+        <div class="signal-grid" id="signalGrid">
+          <div class="loading">加载信号数据...</div>
+        </div>
+      </section>
+
+      <section>
+        <h2>200日均线位置</h2>
+        <div class="chart-container">
+          <div class="chart-title">📈 金价 vs MA200</div>
+          <svg class="chart-svg" id="goldChart" viewBox="0 0 400 120" preserveAspectRatio="none"></svg>
+          <div class="chart-legend">
+            <div class="chart-legend-item">
+              <div class="chart-legend-dot" style="background:var(--gold)"></div>
+              <span>金价</span>
+            </div>
+            <div class="chart-legend-item">
+              <div class="chart-legend-dot" style="background:var(--accent)"></div>
+              <span>200日均线</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>关键价位</h2>
+        <div style="margin-bottom:8px">
+          <span style="font-size:var(--fs-xs);color:var(--text-3)">支撑位</span>
+          <div class="levels-grid" id="supportLevels"></div>
+        </div>
+        <div>
+          <span style="font-size:var(--fs-xs);color:var(--text-3)">阻力位</span>
+          <div class="levels-grid" id="resistanceLevels"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Tab 5: 宏观数据 -->
+    <div class="tab-pane" id="tab-macro" role="tabpanel">
+      <section>
+        <h2>🇨🇳 中国宏观指标</h2>
+        <div class="indicator-grid" id="chinaIndicators">
+          <div class="loading">加载中...</div>
+        </div>
+      </section>
+      <section>
+        <h2>🇺🇸 美国宏观指标</h2>
+        <div class="indicator-grid" id="usIndicators">
+          <div class="loading">加载中...</div>
+        </div>
+      </section>
+      <section>
+        <h2>🌍 全球市场指标</h2>
+        <div class="indicator-grid" id="globalIndicators">
+          <div class="loading">加载中...</div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Tab 6: 财经日历 -->
+    <div class="tab-pane" id="tab-calendar" role="tabpanel">
+      <section>
+        <h2>📅 重要财经事件</h2>
+        <div class="calendar-list" id="calendarList">
+          <div class="loading">加载中...</div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Tab 7: 风险雷达 -->
+    <div class="tab-pane" id="tab-radar" role="tabpanel">
+      <section>
+        <h2>🎯 风险雷达</h2>
+        <div class="radar-container">
+          <div class="risk-card">
+            <h3>市场风险</h3>
+            <div class="risk-bar">
+              <span class="risk-label">股市波动</span>
+              <div class="risk-bar-track"><div class="risk-bar-fill medium" style="width:45%"></div></div>
+              <span class="risk-value">中等</span>
+            </div>
+            <div class="risk-bar">
+              <span class="risk-label">黄金波动</span>
+              <div class="risk-bar-track"><div class="risk-bar-fill low" style="width:30%"></div></div>
+              <span class="risk-value">低</span>
+            </div>
+            <div class="risk-bar">
+              <span class="risk-label">外汇风险</span>
+              <div class="risk-bar-track"><div class="risk-bar-fill medium" style="width:55%"></div></div>
+              <span class="risk-value">中等</span>
+            </div>
+          </div>
+          <div class="risk-card">
+            <h3>财务风险</h3>
+            <div class="risk-bar">
+              <span class="risk-label">负债率</span>
+              <div class="risk-bar-track"><div class="risk-bar-fill low" style="width:25%"></div></div>
+              <span class="risk-value">低</span>
+            </div>
+            <div class="risk-bar">
+              <span class="risk-label">流动性</span>
+              <div class="risk-bar-track"><div class="risk-bar-fill low" style="width:20%"></div></div>
+              <span class="risk-value">充裕</span>
+            </div>
+            <div class="risk-bar">
+              <span class="risk-label">收入稳定性</span>
+              <div class="risk-bar-track"><div class="risk-bar-fill low" style="width:35%"></div></div>
+              <span class="risk-value">稳定</span>
+            </div>
+          </div>
+          <div class="risk-card">
+            <h3>宏观风险</h3>
+            <div class="risk-bar">
+              <span class="risk-label">通胀风险</span>
+              <div class="risk-bar-track"><div class="risk-bar-fill medium" style="width:50%"></div></div>
+              <span class="risk-value">中等</span>
+            </div>
+            <div class="risk-bar">
+              <span class="risk-label">利率风险</span>
+              <div class="risk-bar-track"><div class="risk-bar-fill medium" style="width:40%"></div></div>
+              <span class="risk-value">中等</span>
+            </div>
+            <div class="risk-bar">
+              <span class="risk-label">地缘风险</span>
+              <div class="risk-bar-track"><div class="risk-bar-fill high" style="width:65%"></div></div>
+              <span class="risk-value">偏高</span>
+            </div>
+          </div>
+          <div class="risk-card">
+            <h3>个人风险</h3>
+            <div class="risk-bar">
+              <span class="risk-label">健康风险</span>
+              <div class="risk-bar-track"><div class="risk-bar-fill low" style="width:15%"></div></div>
+              <span class="risk-value">有保障</span>
+            </div>
+            <div class="risk-bar">
+              <span class="risk-label">职业风险</span>
+              <div class="risk-bar-track"><div class="risk-bar-fill medium" style="width:35%"></div></div>
+              <span class="risk-value">中等</span>
+            </div>
+            <div class="risk-bar">
+              <span class="risk-label">紧急备用</span>
+              <div class="risk-bar-track"><div class="risk-bar-fill low" style="width:20%"></div></div>
+              <span class="risk-value">充足</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script src="core.js"></script>
+<script src="gold.js"></script>
+<script src="macro.js"></script>
+<script src="calendar.js"></script>
+<script>
+// ==================== 全局初始化 ====================
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:8000'
+  : '/api';
+
+let marketPulseInterval = null;
+
+// Tab 切换
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'gold') loadGoldData();
+    if (btn.dataset.tab === 'macro') loadMacroData();
+    if (btn.dataset.tab === 'calendar') loadCalendarData();
+  });
+});
+
+function updateTime() {
+  const now = new Date();
+  document.getElementById('currentTime').textContent = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+updateTime();
+setInterval(updateTime, 1000);
+
+// 加载市场脉搏
+async function loadMarketPulse() {
+  try {
+    const resp = await fetch(API_BASE + '/market/');
+    const data = await resp.json();
+    renderPulseBar(data.items || []);
+    document.getElementById('lastUpdate').textContent = '更新: ' + new Date(data.updated_at).toLocaleTimeString('zh-CN');
+  } catch (e) {
+    console.warn('市场脉搏加载失败:', e);
+    document.getElementById('pulseBar').innerHTML = '<span class="pulse-loading">数据加载失败</span>';
+  }
+}
+
+function renderPulseBar(items) {
+  const bar = document.getElementById('pulseBar');
+  bar.innerHTML = items.map(item => `
+    <div class="pulse-item">
+      <span class="pulse-name">${item.name}</span>
+      <span class="pulse-price">${item.price || '—'}</span>
+      <span class="pulse-change ${item.trend}">${item.change_pct > 0 ? '+' : ''}${item.change_pct?.toFixed(2) || 0}%</span>
+      ${item.sparkline?.length > 0 ? renderSparkline(item.sparkline) : ''}
+    </div>
+  `).join('') + '<span class="pulse-refresh">1分钟自动刷新</span>';
+}
+
+function renderSparkline(data) {
+  if (!data || data.length < 2) return '';
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const points = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * 40;
+    const y = 20 - ((v - min) / range) * 18;
+    return `${x},${y}`;
+  }).join(' ');
+  const color = data[data.length - 1] >= data[0] ? '#ff5c7a' : '#3ddc97';
+  return `<svg class="pulse-sparkline" viewBox="0 0 40 20"><polyline points="${points}" fill="none" stroke="${color}" stroke-width="1.5"/></svg>`;
+}
+
+// 黄金数据
+async function loadGoldData() {
+  if (window._goldLoaded) return;
+  window._goldLoaded = true;
+  try {
+    const resp = await fetch(API_BASE + '/gold/');
+    const data = await resp.json();
+    renderGoldData(data);
+  } catch (e) { console.warn('黄金数据加载失败:', e); }
+}
+
+function renderGoldData(data) {
+  const prices = data.prices || {};
+  const position = data.position || {};
+  const signals = data.signals || [];
+  const summary = data.signals_summary || {};
+  const levels = data.key_levels || {};
+
+  const usdPrice = prices.usd_per_oz || {};
+  const cnyPrice = prices.cny_per_gram || {};
+
+  document.getElementById('goldUsdPrice').textContent = usdPrice.price ? '$' + usdPrice.price.toFixed(2) : '—';
+  document.getElementById('goldUsdChange').textContent = (usdPrice.change_pct > 0 ? '↑' : '↓') + Math.abs(usdPrice.change_pct || 0) + '%';
+  document.getElementById('goldUsdChange').className = 'delta ' + (usdPrice.change_pct > 0 ? 'up' : 'down');
+
+  document.getElementById('goldCnyPrice').textContent = cnyPrice.price ? '¥' + cnyPrice.price.toFixed(2) : '—';
+  document.getElementById('goldCnyChange').textContent = (cnyPrice.change_pct > 0 ? '↑' : '↓') + Math.abs(cnyPrice.change_pct || 0) + '%';
+  document.getElementById('goldCnyChange').className = 'delta ' + (cnyPrice.change_pct > 0 ? 'up' : 'down');
+
+  document.getElementById('goldMarketValue').textContent = position.market_value ? '¥' + Math.round(position.market_value).toLocaleString() : '—';
+  document.getElementById('goldCost').textContent = position.total_cost ? '¥' + Math.round(position.total_cost).toLocaleString() : '—';
+
+  const pnlEl = document.getElementById('goldPnl');
+  const pnl = position.unrealized_pnl || 0;
+  pnlEl.textContent = (pnl >= 0 ? '+' : '') + Math.round(pnl).toLocaleString() + ' (' + (position.unrealized_pnl_pct || 0).toFixed(2) + '%)';
+  pnlEl.className = 'delta ' + (pnl >= 0 ? 'up' : 'down');
+
+  // 信号灯
+  const signalGrid = document.getElementById('signalGrid');
+  signalGrid.innerHTML = signals.map(s => {
+    const cls = s.status === 'green' ? 'green' : s.status === 'yellow' ? 'yellow' : 'gray';
+    const txt = s.status === 'green' ? '满足' : s.status === 'yellow' ? '待确认' : '无法确认';
+    return `<div class="signal-item"><div class="signal-light ${cls}"></div><span class="signal-name">${s.name}</span><span class="signal-status ${cls}">${txt}</span></div>`;
+  }).join('');
+
+  // 建议
+  const alertArea = document.getElementById('goldAlertArea');
+  if (summary.green_count >= 2) {
+    alertArea.innerHTML = `<div class="alert-banner"><span class="alert-icon">⚠️</span><span class="alert-text"><strong>${summary.green_count}条信号满足</strong> - ${summary.recommendation}</span></div>`;
+  } else {
+    alertArea.innerHTML = `<div class="alert-banner ok"><span class="alert-icon">✓</span><span class="alert-text ok"><strong>${summary.green_count}条信号满足</strong> - 继续观望</span></div>`;
+  }
+
+  document.getElementById('supportLevels').innerHTML = (levels.support || []).map(v => `<div class="level-item support"><div class="level-label">支撑</div><div class="level-value">${v}</div></div>`).join('');
+  document.getElementById('resistanceLevels').innerHTML = (levels.resistance || []).map(v => `<div class="level-item resistance"><div class="level-label">阻力</div><div class="level-value">${v}</div></div>`).join('');
+
+  drawGoldChart(usdPrice.price || 2300, usdPrice.ma200 || 2100);
+}
+
+function drawGoldChart(price, ma200) {
+  const svg = document.getElementById('goldChart');
+  if (!svg) return;
+  const baseY = 80;
+  const priceY = baseY - (price - 2000) / 100 * 50;
+  const maY = baseY - (ma200 - 2000) / 100 * 50;
+  svg.innerHTML = `
+    <defs><linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#d4a64a;stop-opacity:0.3"/><stop offset="100%" style="stop-color:#d4a64a;stop-opacity:0"/></linearGradient></defs>
+    <line x1="0" y1="${baseY}" x2="400" y2="${baseY}" stroke="#1f2533" stroke-dasharray="4,4"/>
+    <text x="5" y="${baseY - 5}" fill="#3e4658" font-size="9" font-family="JetBrains Mono">${price}</text>
+    <line x1="0" y1="${maY}" x2="400" y2="${maY}" stroke="#7aa2ff" stroke-width="2" opacity="0.7"/>
+    <text x="5" y="${maY - 5}" fill="#7aa2ff" font-size="9" font-family="JetBrains Mono">MA200: ${ma200.toFixed(0)}</text>
+    <path d="M 0 100 Q 100 85 200 70 T 400 ${priceY}" fill="none" stroke="#d4a64a" stroke-width="2"/>
+    <path d="M 0 100 Q 100 85 200 70 T 400 ${priceY} L 400 120 L 0 120 Z" fill="url(#goldGrad)"/>
+    <circle cx="380" cy="${priceY}" r="4" fill="#d4a64a"/>
+    <rect x="300" y="${priceY - 18}" width="80" height="16" rx="3" fill="#0e1116" opacity="0.9"/>
+    <text x="340" y="${priceY - 6}" fill="#d4a64a" font-size="10" font-family="JetBrains Mono" text-anchor="middle">$${price.toFixed(0)}</text>
+    <text x="200" y="115" fill="${price > ma200 ? '#3ddc97' : '#ff5c7a'}" font-size="10" font-family="JetBrains Mono" text-anchor="middle">${price > ma200 ? '✓ 金价位于MA200上方' : '○ 金价位于MA200下方'}</text>
+  `;
+}
+
+// 宏观数据
+async function loadMacroData() {
+  if (window._macroLoaded) return;
+  window._macroLoaded = true;
+  try {
+    const resp = await fetch(API_BASE + '/macro/');
+    const data = await resp.json();
+    renderMacroData(data);
+  } catch (e) { console.warn('宏观数据加载失败:', e); }
+}
+
+function renderMacroData(data) {
+  const china = data.china || {};
+  const us = data.us || {};
+  const global = data.global || {};
+
+  function renderIndicator(ind) {
+    if (!ind || ind.error) return '<div class="indicator-card"><div class="loading">加载失败</div></div>';
+    const alertClass = ind.alert ? 'alert' : '';
+    return `<div class="indicator-card ${alertClass}">${ind.alert ? '<span class="alert-badge">⚠️</span>' : ''}<div class="name">${ind.name}</div><div class="value">${ind.value}<span class="unit">${ind.unit || ''}</span></div><div class="change ${ind.trend === 'up' ? 'up' : ind.trend === 'down' ? 'down' : ''}">${ind.change || (ind.change_pct != null ? (ind.change_pct > 0 ? '+' : '') + ind.change_pct.toFixed(2) + '%' : '')}</div><div class="period">${ind.period || ''}</div></div>`;
+  }
+
+  document.getElementById('chinaIndicators').innerHTML = Object.entries(china).map(([,v]) => renderIndicator(v)).join('');
+  document.getElementById('usIndicators').innerHTML = Object.entries(us).map(([,v]) => renderIndicator(v)).join('');
+  document.getElementById('globalIndicators').innerHTML = Object.entries(global).map(([,v]) => renderIndicator(v)).join('');
+}
+
+// 日历数据
+async function loadCalendarData() {
+  if (window._calendarLoaded) return;
+  window._calendarLoaded = true;
+  try {
+    const resp = await fetch(API_BASE + '/calendar/');
+    const data = await resp.json();
+    renderCalendar(data.events || []);
+  } catch (e) { console.warn('日历数据加载失败:', e); }
+}
+
+const countryNames = {'US': '美国', 'CN': '中国', 'EU': '欧洲', 'JP': '日本', 'UK': '英国'};
+const importanceLabels = {'high': '高', 'medium': '中', 'low': '低'};
+
+function renderCalendar(events) {
+  const list = document.getElementById('calendarList');
+  list.innerHTML = events.map(e => {
+    const parts = e.date.split('-');
+    const dateStr = `${parseInt(parts[1])}月${parseInt(parts[2])}日`;
+    return `<div class="calendar-item ${e.importance}"><div class="calendar-date">${dateStr}<br><span style="color:var(--text-3);font-size:9px">${e.time}</span></div><div class="calendar-country">${countryNames[e.country] || e.country}</div><div class="calendar-event">${e.event}</div><div class="calendar-importance ${e.importance}">${importanceLabels[e.importance] || '低'}</div></div>`;
+  }).join('');
+}
+
+// 启动
+loadMarketPulse();
+setInterval(loadMarketPulse, 60000);
+</script>
+</body>
+</html>

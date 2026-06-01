@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.html" }
+  ],
+  "buildCommand": "echo 'Static site - no build needed'",
+  "outputDirectory": "public",
+  "functions": {
+    "api/*.py": {
+      "runtime": "python3.11",
+      "memorySize": 256,
+      "maxDuration": 10
+    }
+  }
+}

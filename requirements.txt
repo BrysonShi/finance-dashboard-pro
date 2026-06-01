@@ -1,0 +1,6 @@
+# AI Finance Dashboard Pro - Python依赖
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+yfinance==0.2.35
+requests==2.31.0
+python-dateutil==2.8.2
